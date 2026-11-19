@@ -1,0 +1,9 @@
+# gitignore syntax; keep the graph to project code + docs
+.agents/
+.claude/
+skills-lock.json
+node_modules/
+dist/
+coverage/
+test-results/
+playwright-report/
