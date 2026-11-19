@@ -1,0 +1,22 @@
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+# test artifacts
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+.playwright-mcp/
+# knowledge graph (rebuilt locally)
+graphify-out/
+# editor / os
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/
+# local claude settings
+.claude/settings.local.json
