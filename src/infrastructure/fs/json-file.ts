@@ -71,7 +71,12 @@ export class JsonFile<S extends z.ZodType> {
   async #moveAside(cause: unknown): Promise<void> {
     const { path, clock, logger } = this.#o
     const backup = `${path}.corrupt-${clock.now().toISOString().replace(/[:.]/g, '-')}`
-    await rename(path, backup)
+    try {
+      await rename(path, backup)
+    } catch (err) {
+      if (isMissing(err)) return // a concurrent read already moved it aside
+      throw err
+    }
     logger.warn('corrupt JSON file moved aside', {
       path,
       backup,

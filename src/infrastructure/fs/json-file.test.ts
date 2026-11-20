@@ -52,6 +52,15 @@ describe('JsonFile', () => {
     expect(await f.read()).toEqual({ count: 2, at: new Date('2026-01-01T00:00:00.000Z') })
   })
 
+  it('two concurrent reads of a corrupt file both return the default', async () => {
+    await writeFile(path, '{nope')
+    const f = file()
+    expect(await Promise.all([f.read(), f.read()])).toEqual([
+      { count: 0, at: null },
+      { count: 0, at: null },
+    ])
+  })
+
   it.each([
     ['invalid JSON', '{nope'],
     ['a schema mismatch', '{"version":1,"count":"x","at":null}'],
