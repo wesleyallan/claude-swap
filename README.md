@@ -155,7 +155,7 @@ Stop the service before editing these files by hand. A file that does not parse 
 | Unit + integration tests | `npm test` |
 | End-to-end tests | `npm run test:e2e` |
 | Lint + types + tests | `npm run check` |
-| Bundle size and idle memory budget | `npm run perf:budget` |
+| Bundle size and idle memory budget (initial JS < 200 kB gzip, idle RSS < 100 MB) | `npm run perf:budget` |
 
 Tests and `perf:budget` never touch your real `~/.claude`, `~/.claude.json` or
 `~/.config/claude-swap`: they run the server with temporary `HOME`, `CLAUDE_SWAP_HOME` and
@@ -163,3 +163,7 @@ Tests and `perf:budget` never touch your real `~/.claude`, `~/.claude.json` or
 
 Design: [`docs/architecture.md`](docs/architecture.md). Visual language: [`DESIGN.md`](DESIGN.md).
 Contributor and agent rules: [`AGENTS.md`](AGENTS.md).
+
+## License
+
+[MIT](LICENSE) © 2026 wesleyallan
