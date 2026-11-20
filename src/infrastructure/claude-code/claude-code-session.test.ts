@@ -92,6 +92,16 @@ describe('FileClaudeCodeSession.readCurrentLogin', () => {
     expect(await session().readCurrentLogin()).toBeNull()
   })
 
+  it.each(['claudeAiOauth', 'oauthAccount'])('returns null when %s is null', async (key) => {
+    await installFixtures()
+    const [file, path] =
+      key === 'claudeAiOauth'
+        ? ['credentials.json', paths.credentials]
+        : ['claude.json', paths.claudeJson]
+    await writeFile(path, JSON.stringify({ ...(await fixture(file)), [key]: null }))
+    expect(await session().readCurrentLogin()).toBeNull()
+  })
+
   it('reads the live login, keeping unmodelled keys', async () => {
     await installFixtures()
     const login = await session().readCurrentLogin()

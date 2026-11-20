@@ -213,7 +213,7 @@ Separating secrets from preferences keeps the user-editable config safe to open,
   activity keeps the last 200 entries. Activity types: `swap {from, to, reason}` and
   `account-added | account-removed | needs-reauth | error {accountId?, message?}`.
 - 2026-11-19 — **Claude Code adapter** (`infrastructure/claude-code`, `FileClaudeCodeSession`):
-  a missing file **or** a missing `claudeAiOauth`/`oauthAccount` key reads as "not logged in"
+  a missing file **or** a missing (or `null`, T13) `claudeAiOauth`/`oauthAccount` key reads as "not logged in"
   (`null`); invalid JSON, a non-object or a key failing its schema throws `ClaudeCodeFileError`
   (path + field names only, never content). `writeLogin` reads and validates both files first, so
   a malformed file is never overwritten; then backs up, writes `.credentials.json`, then

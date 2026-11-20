@@ -72,7 +72,7 @@ async function readDoc(path: string): Promise<Doc | null> {
 }
 
 function parseKey<S extends z.ZodType>(path: string, doc: Doc | null, key: string, schema: S) {
-  if (doc?.[key] === undefined) return null
+  if (doc?.[key] == null) return null // missing or null: logged out
   const result = schema.safeParse(doc[key])
   if (!result.success) {
     const fields = result.error.issues.map((i) => [key, ...i.path].join('.'))
