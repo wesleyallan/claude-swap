@@ -1,0 +1,35 @@
+{
+  "app": {
+    "name": "claude-swap",
+    "skipToContent": "Pular para o conteúdo"
+  },
+  "header": {
+    "addAccount": "Adicionar conta",
+    "settings": "Configurações",
+    "language": "Idioma",
+    "switchToDark": "Mudar para o tema escuro",
+    "switchToLight": "Mudar para o tema claro"
+  },
+  "engine": {
+    "label": "Status do motor",
+    "auto": "Automático",
+    "manual": "Manual",
+    "nextCheck": "Automático · próxima verificação {time}",
+    "paused": "Pausado · login desconhecido",
+    "offline": "Servidor inacessível"
+  },
+  "locales": {
+    "en": "English",
+    "es": "Español",
+    "pt-BR": "Português (Brasil)"
+  },
+  "dashboard": {
+    "title": "Contas",
+    "intro": "Os gráficos de uso e a lista ordenada de contas aparecerão aqui."
+  },
+  "modal": {
+    "close": "Fechar",
+    "settingsTitle": "Configurações",
+    "addAccountTitle": "Adicionar conta"
+  }
+}

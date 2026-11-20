@@ -1,0 +1,35 @@
+{
+  "app": {
+    "name": "claude-swap",
+    "skipToContent": "Skip to content"
+  },
+  "header": {
+    "addAccount": "Add account",
+    "settings": "Settings",
+    "language": "Language",
+    "switchToDark": "Switch to dark theme",
+    "switchToLight": "Switch to light theme"
+  },
+  "engine": {
+    "label": "Engine status",
+    "auto": "Auto",
+    "manual": "Manual",
+    "nextCheck": "Auto · next check {time}",
+    "paused": "Paused · unknown login",
+    "offline": "Server unreachable"
+  },
+  "locales": {
+    "en": "English",
+    "es": "Español",
+    "pt-BR": "Português (Brasil)"
+  },
+  "dashboard": {
+    "title": "Accounts",
+    "intro": "Usage charts and your ordered account list will appear here."
+  },
+  "modal": {
+    "close": "Close",
+    "settingsTitle": "Settings",
+    "addAccountTitle": "Add account"
+  }
+}
