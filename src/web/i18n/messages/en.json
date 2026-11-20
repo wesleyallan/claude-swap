@@ -42,7 +42,8 @@
     "close": "Close",
     "settingsTitle": "Settings",
     "addAccountTitle": "Add account",
-    "removeAccountTitle": "Remove account"
+    "removeAccountTitle": "Remove account",
+    "cancel": "Cancel"
   },
   "stats": {
     "label": "Summary",
@@ -109,5 +110,52 @@
     "saveFailed": "Couldn't save the change",
     "rolledBack": "Your last change was undone. Try again.",
     "importFailed": "Couldn't import the current Claude Code login"
+  },
+  "addAccount": {
+    "intro": "claude-swap copies the account Claude Code is logged in with right now. To add another one:",
+    "step1": "Open a terminal and run <code>claude</code>.",
+    "step2": "Type <code>/login</code> and sign in with the account you want to add.",
+    "step3": "Come back here and import it.",
+    "logoutTitle": "Use /login, not /logout",
+    "logoutHint": "Logging out can revoke the login claude-swap keeps for that account. /login switches accounts safely.",
+    "detected": "Logged in now",
+    "checking": "Checking Claude Code…",
+    "notLoggedIn": "Claude Code isn't logged in. Run /login first.",
+    "readFailed": "Couldn't read Claude Code's login files.",
+    "known": "In your list: importing refreshes its login",
+    "label": "Name (optional)",
+    "labelHint": "Shown in the list. Leave empty to use the account name.",
+    "import": "Import current login",
+    "added": "{name} added",
+    "updated": "Login updated for {name}"
+  },
+  "settings": {
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "themes": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "language": "Language",
+    "rotation": "Rotation",
+    "autoRotate": "Swap automatically",
+    "autoRotateHint": "Off keeps Claude Code on the top account until you change the order.",
+    "fiveHour": "5-hour limit (%)",
+    "sevenDay": "Weekly limit (%)",
+    "thresholdHint": "Swap away once usage reaches this share of the window.",
+    "thresholdError": "Enter a whole number from 50 to 100.",
+    "pollInterval": "Check every (seconds)",
+    "pollIntervalHint": "How often usage is fetched for each account.",
+    "pollIntervalError": "Enter a whole number from 60 to 3600.",
+    "save": "Save settings"
+  },
+  "removeAccount": {
+    "confirm": "{name} and its saved login will be removed from claude-swap. Claude Code itself isn't logged out.",
+    "activeTitle": "Claude Code is using this account",
+    "activeHint": "claude-swap will switch Claude Code to the next available account.",
+    "missing": "This account isn't in your list anymore.",
+    "remove": "Remove account",
+    "removed": "{name} removed"
   }
 }

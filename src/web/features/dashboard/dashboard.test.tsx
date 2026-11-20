@@ -220,9 +220,8 @@ it('promotes with Use now and toggles an account', async () => {
   )
 })
 
-it('flags an unknown Claude Code login and imports it', async () => {
+it('flags an unknown Claude Code login and links to the import modal', async () => {
   dashboard.engine.unknownLogin = 'new@example.test'
-  const user = userEvent.setup()
   renderApp()
   expect(await screen.findByText('Swapping is paused')).toBeInTheDocument()
   expect(screen.getByText(/logged in as new@example\.test/)).toBeInTheDocument()
@@ -231,11 +230,9 @@ it('flags an unknown Claude Code login and imports it', async () => {
   expect(within(summary).getByText('Not in your list')).toBeInTheDocument()
   // The last account we activated is no longer what Claude Code uses.
   expect(within(await list()).queryByText('Active')).not.toBeInTheDocument()
-  await user.click(screen.getByRole('button', { name: 'Import account' }))
-  await waitFor(() =>
-    expect(requests).toEqual([
-      { method: 'POST', path: '/api/accounts/import', body: { label: '' } },
-    ]),
+  expect(screen.getByRole('button', { name: 'Import account' })).toHaveAttribute(
+    'href',
+    '/accounts/new',
   )
 })
 

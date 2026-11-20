@@ -2,11 +2,11 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
+  lazyRouteComponent,
   Outlet,
   type RouterHistory,
 } from '@tanstack/react-router'
 import { useTranslations } from 'use-intl'
-import { RouteModal } from './components/route-modal'
 import { Dashboard } from './features/dashboard/dashboard'
 import { Header } from './features/shell/header'
 
@@ -49,28 +49,30 @@ const dashboardRoute = createRoute({
   component: DashboardLayout,
 })
 const indexRoute = createRoute({ getParentRoute: () => dashboardRoute, path: '/' })
-// Placeholders: T10 fills these modals in.
+// Modals load on demand: they are rarely opened and keep their form code out of the main chunk.
 const settingsRoute = createRoute({
   getParentRoute: () => dashboardRoute,
   path: 'settings',
-  component: function SettingsModal() {
-    return <RouteModal title={useTranslations('modal')('settingsTitle')} />
-  },
+  component: lazyRouteComponent(
+    () => import('./features/settings/settings-modal'),
+    'SettingsModal',
+  ),
 })
 const addAccountRoute = createRoute({
   getParentRoute: () => dashboardRoute,
   path: 'accounts/new',
-  component: function AddAccountModal() {
-    return <RouteModal title={useTranslations('modal')('addAccountTitle')} />
-  },
+  component: lazyRouteComponent(
+    () => import('./features/accounts/add-account-modal'),
+    'AddAccountModal',
+  ),
 })
-
 const removeAccountRoute = createRoute({
   getParentRoute: () => dashboardRoute,
   path: 'accounts/$id/remove',
-  component: function RemoveAccountModal() {
-    return <RouteModal title={useTranslations('modal')('removeAccountTitle')} />
-  },
+  component: lazyRouteComponent(
+    () => import('./features/accounts/remove-account-modal'),
+    'RemoveAccountModal',
+  ),
 })
 
 const routeTree = rootRoute.addChildren([

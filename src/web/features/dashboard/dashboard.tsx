@@ -14,7 +14,7 @@ import {
 } from '@/web/components/ui/empty'
 import { Skeleton } from '@/web/components/ui/skeleton'
 import type { Dashboard as DashboardData } from '@/web/lib/api'
-import { useDashboard, useImportCurrentLogin } from '@/web/lib/query'
+import { useDashboard } from '@/web/lib/query'
 import { AccountList } from './account-list'
 import { lastTickError } from './model'
 import { StatTiles } from './stat-tiles'
@@ -59,7 +59,6 @@ const ChartSkeleton = () => (
 
 function Banners({ data }: { data: DashboardData }) {
   const t = useTranslations('dashboard')
-  const importLogin = useImportCurrentLogin()
   const error = lastTickError(data.activity, data.engine)
   return (
     <>
@@ -69,7 +68,12 @@ function Banners({ data }: { data: DashboardData }) {
           <AlertTitle>{t('unknownLoginTitle')}</AlertTitle>
           <AlertDescription className="flex flex-col items-start gap-3">
             <span>{t('unknownLogin', { email: data.engine.unknownLogin })}</span>
-            <Button size="sm" disabled={importLogin.isPending} onClick={() => importLogin.mutate()}>
+            <Button
+              size="sm"
+              className="no-underline!"
+              nativeButton={false}
+              render={<Link to="/accounts/new" />}
+            >
               <UserPlusIcon data-icon="inline-start" />
               {t('importAccount')}
             </Button>

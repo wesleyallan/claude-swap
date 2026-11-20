@@ -42,7 +42,8 @@
     "close": "Fechar",
     "settingsTitle": "Configurações",
     "addAccountTitle": "Adicionar conta",
-    "removeAccountTitle": "Remover conta"
+    "removeAccountTitle": "Remover conta",
+    "cancel": "Cancelar"
   },
   "stats": {
     "label": "Resumo",
@@ -109,5 +110,52 @@
     "saveFailed": "Não foi possível salvar a alteração",
     "rolledBack": "Sua última alteração foi desfeita. Tente de novo.",
     "importFailed": "Não foi possível importar o login atual do Claude Code"
+  },
+  "addAccount": {
+    "intro": "O claude-swap copia a conta em que o Claude Code está logado agora. Para adicionar outra:",
+    "step1": "Abra um terminal e rode <code>claude</code>.",
+    "step2": "Digite <code>/login</code> e entre com a conta que você quer adicionar.",
+    "step3": "Volte aqui e importe a conta.",
+    "logoutTitle": "Use /login, não /logout",
+    "logoutHint": "Sair pode revogar o login que o claude-swap guarda para essa conta. O /login troca de conta com segurança.",
+    "detected": "Logado agora",
+    "checking": "Verificando o Claude Code…",
+    "notLoggedIn": "O Claude Code não está logado. Rode /login primeiro.",
+    "readFailed": "Não foi possível ler os arquivos de login do Claude Code.",
+    "known": "Já está na sua lista: importar renova o login",
+    "label": "Nome (opcional)",
+    "labelHint": "Aparece na lista. Deixe vazio para usar o nome da conta.",
+    "import": "Importar login atual",
+    "added": "{name} adicionada",
+    "updated": "Login atualizado para {name}"
+  },
+  "settings": {
+    "appearance": "Aparência",
+    "theme": "Tema",
+    "themes": {
+      "light": "Claro",
+      "dark": "Escuro",
+      "system": "Sistema"
+    },
+    "language": "Idioma",
+    "rotation": "Rotação",
+    "autoRotate": "Trocar automaticamente",
+    "autoRotateHint": "Desligado, o Claude Code fica na primeira conta até você mudar a ordem.",
+    "fiveHour": "Limite de 5 horas (%)",
+    "sevenDay": "Limite semanal (%)",
+    "thresholdHint": "Troca de conta quando o uso chega a esta porcentagem da janela.",
+    "thresholdError": "Digite um número inteiro de 50 a 100.",
+    "pollInterval": "Verificar a cada (segundos)",
+    "pollIntervalHint": "Com que frequência o uso de cada conta é consultado.",
+    "pollIntervalError": "Digite um número inteiro de 60 a 3600.",
+    "save": "Salvar configurações"
+  },
+  "removeAccount": {
+    "confirm": "{name} e o login salvo serão removidos do claude-swap. O Claude Code não será deslogado.",
+    "activeTitle": "O Claude Code está usando esta conta",
+    "activeHint": "O claude-swap vai trocar o Claude Code para a próxima conta disponível.",
+    "missing": "Esta conta não está mais na sua lista.",
+    "remove": "Remover conta",
+    "removed": "{name} removida"
   }
 }

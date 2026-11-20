@@ -1,10 +1,28 @@
 import { useNavigate } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
 import { useTranslations } from 'use-intl'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/web/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/web/components/ui/dialog'
 
-/** A dialog that *is* a route: closing it navigates back to the dashboard underneath. */
-export function RouteModal({ title, children }: { title: string; children?: ReactNode }) {
+/**
+ * A dialog that *is* a route: closing it (Esc, backdrop, ✕, a `DialogClose`) navigates back to the
+ * dashboard underneath. Base UI traps focus inside and returns it to the element focused before
+ * it opened (the link that navigated here).
+ */
+export function RouteModal({
+  title,
+  description,
+  children,
+}: {
+  title: string
+  description?: ReactNode
+  children?: ReactNode
+}) {
   const navigate = useNavigate()
   const t = useTranslations('modal')
   return (
@@ -12,6 +30,7 @@ export function RouteModal({ title, children }: { title: string; children?: Reac
       <DialogContent closeLabel={t('close')}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
+          {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
         {children}
       </DialogContent>

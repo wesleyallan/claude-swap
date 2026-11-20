@@ -42,7 +42,8 @@
     "close": "Cerrar",
     "settingsTitle": "Ajustes",
     "addAccountTitle": "Añadir cuenta",
-    "removeAccountTitle": "Eliminar cuenta"
+    "removeAccountTitle": "Eliminar cuenta",
+    "cancel": "Cancelar"
   },
   "stats": {
     "label": "Resumen",
@@ -109,5 +110,52 @@
     "saveFailed": "No se pudo guardar el cambio",
     "rolledBack": "Se deshizo tu último cambio. Inténtalo de nuevo.",
     "importFailed": "No se pudo importar la sesión actual de Claude Code"
+  },
+  "addAccount": {
+    "intro": "claude-swap copia la cuenta con la que Claude Code ha iniciado sesión ahora. Para añadir otra:",
+    "step1": "Abre una terminal y ejecuta <code>claude</code>.",
+    "step2": "Escribe <code>/login</code> e inicia sesión con la cuenta que quieres añadir.",
+    "step3": "Vuelve aquí e impórtala.",
+    "logoutTitle": "Usa /login, no /logout",
+    "logoutHint": "Cerrar sesión puede revocar el acceso que claude-swap guarda para esa cuenta. /login cambia de cuenta sin riesgo.",
+    "detected": "Sesión actual",
+    "checking": "Comprobando Claude Code…",
+    "notLoggedIn": "Claude Code no tiene ninguna sesión iniciada. Ejecuta /login primero.",
+    "readFailed": "No se pudieron leer los archivos de sesión de Claude Code.",
+    "known": "Ya está en tu lista: importarla renueva su sesión",
+    "label": "Nombre (opcional)",
+    "labelHint": "Se muestra en la lista. Déjalo vacío para usar el nombre de la cuenta.",
+    "import": "Importar sesión actual",
+    "added": "{name} añadida",
+    "updated": "Sesión actualizada para {name}"
+  },
+  "settings": {
+    "appearance": "Apariencia",
+    "theme": "Tema",
+    "themes": {
+      "light": "Claro",
+      "dark": "Oscuro",
+      "system": "Sistema"
+    },
+    "language": "Idioma",
+    "rotation": "Rotación",
+    "autoRotate": "Cambiar automáticamente",
+    "autoRotateHint": "Desactivado, Claude Code se queda en la primera cuenta hasta que cambies el orden.",
+    "fiveHour": "Límite de 5 horas (%)",
+    "sevenDay": "Límite semanal (%)",
+    "thresholdHint": "Cambia de cuenta cuando el uso llega a este porcentaje de la ventana.",
+    "thresholdError": "Introduce un número entero entre 50 y 100.",
+    "pollInterval": "Comprobar cada (segundos)",
+    "pollIntervalHint": "Cada cuánto se consulta el uso de cada cuenta.",
+    "pollIntervalError": "Introduce un número entero entre 60 y 3600.",
+    "save": "Guardar ajustes"
+  },
+  "removeAccount": {
+    "confirm": "{name} y su sesión guardada se eliminarán de claude-swap. Claude Code no cerrará sesión.",
+    "activeTitle": "Claude Code está usando esta cuenta",
+    "activeHint": "claude-swap cambiará Claude Code a la siguiente cuenta disponible.",
+    "missing": "Esta cuenta ya no está en tu lista.",
+    "remove": "Eliminar cuenta",
+    "removed": "{name} eliminada"
   }
 }

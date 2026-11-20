@@ -3,6 +3,7 @@ import { useTranslations } from 'use-intl'
 import { toast } from '@/web/components/ui/toast'
 import {
   type Dashboard,
+  fetchCurrentLogin,
   fetchDashboard,
   importCurrentLogin,
   type Locale,
@@ -10,6 +11,7 @@ import {
   patchPreferences,
   promoteAccount,
   putOrder,
+  removeAccount,
   setAccountEnabled,
   type Theme,
 } from './api'
@@ -93,12 +95,22 @@ export const useSetAccountEnabled = () =>
     accounts: d.accounts.map((a) => (a.id === id ? { ...a, enabled } : a)),
   }))
 
-/** Imports the login Claude Code is using right now (the "unknown login" banner). */
+export const useRemoveAccount = () =>
+  useDashboardMutation(removeAccount, (d, id) => ({
+    ...d,
+    accounts: d.accounts.filter((a) => a.id !== id),
+  }))
+
+/** Who Claude Code is logged in as; polled fast while the "Add account" modal is open. */
+export const useCurrentLogin = () =>
+  useQuery({ queryKey: ['current-login'], queryFn: fetchCurrentLogin, refetchInterval: 3000 })
+
+/** Imports the login Claude Code is using right now, with an optional label. */
 export function useImportCurrentLogin() {
   const client = useQueryClient()
   const t = useTranslations('errors')
   return useMutation({
-    mutationFn: importCurrentLogin,
+    mutationFn: (label: string) => importCurrentLogin(label),
     onError: () => toast.add({ title: t('importFailed'), type: 'error' }),
     onSettled: () => client.invalidateQueries({ queryKey: dashboardKey }),
   })
