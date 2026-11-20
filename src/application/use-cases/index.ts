@@ -1,6 +1,6 @@
 // Use cases: plain functions over a `deps` object. Mutations run under the shared mutex (so they
 // never interleave with an engine tick) and then poke the engine without awaiting the tick.
-import type { AccountId } from '@/domain/account'
+import { type AccountId, type AccountStatus, accountStatus } from '@/domain/account'
 import { AccountNotFoundError } from '@/domain/errors'
 import { applyOrder, promoteAccount as promote } from '@/domain/ordering'
 import type { Preferences } from '@/domain/preferences'
@@ -164,6 +164,8 @@ export interface Dashboard {
   readonly preferences: Preferences
   /** Priority order. Carries no tokens (they live only in `SecretsRepository`). */
   readonly accounts: readonly StoredAccount[]
+  /** Per account id, derived from the account, its last snapshot and the thresholds right now. */
+  readonly statuses: Readonly<Record<AccountId, AccountStatus>>
   readonly usage: AppState['usage']
   readonly history: readonly HistoryPoint[]
   readonly activity: readonly ActivityEntry[]
@@ -172,12 +174,19 @@ export interface Dashboard {
 }
 
 export async function getDashboard(
-  d: Pick<UseCaseDeps, 'config' | 'state' | 'engine'>,
+  d: Pick<UseCaseDeps, 'config' | 'state' | 'engine' | 'clock'>,
 ): Promise<Dashboard> {
   const [config, state] = await Promise.all([d.config.load(), d.state.load()])
+  const now = d.clock.now()
   return {
     preferences: config.preferences,
     accounts: config.accounts,
+    statuses: Object.fromEntries(
+      config.accounts.map((a) => [
+        a.id,
+        accountStatus(a, state.usage[a.id], config.preferences.thresholds, now),
+      ]),
+    ),
     usage: state.usage,
     history: state.history,
     activity: state.activity,

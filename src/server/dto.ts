@@ -39,7 +39,7 @@ const toActivityDto = (e: ActivityEntry) =>
 
 export const toDashboardDto = (d: Dashboard) => ({
   preferences: d.preferences,
-  accounts: d.accounts.map(toAccountDto),
+  accounts: d.accounts.map((a) => ({ ...toAccountDto(a), status: d.statuses[a.id] ?? 'unknown' })),
   usage: Object.fromEntries(Object.entries(d.usage).map(([id, s]) => [id, toUsageDto(s)])),
   history: d.history.map((p) => ({
     t: p.t.toISOString(),

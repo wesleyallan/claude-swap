@@ -187,12 +187,20 @@ describe('updatePreferences', () => {
 describe('getDashboard', () => {
   it('returns accounts, usage, history, activity, active id and engine status', async () => {
     const d = setup()
-    d.state.data = { ...d.state.data, lastActiveId: 'a' }
+    const resetsAt = new Date(d.clock.now().getTime() + 60_000)
+    d.state.data = {
+      ...d.state.data,
+      lastActiveId: 'a',
+      usage: {
+        a: { fiveHour: { utilization: 100, resetsAt }, sevenDay: null, fetchedAt: d.clock.now() },
+      },
+    }
     const dash = await getDashboard(d)
     expect(dash).toEqual({
       preferences: DEFAULT_PREFERENCES,
       accounts: d.config.data.accounts,
-      usage: {},
+      statuses: { a: 'exhausted', b: 'unknown' },
+      usage: d.state.data.usage,
       history: [],
       activity: [],
       activeId: 'a',

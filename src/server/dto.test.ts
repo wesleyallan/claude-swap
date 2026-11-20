@@ -33,6 +33,7 @@ const dashboard: Dashboard = {
   },
   history: [{ t, accountId: 'a', fiveHour: 50, sevenDay: null }],
   activity: [{ t, type: 'swap', from: null, to: 'a', reason: 'manual' }],
+  statuses: { a: 'ok' },
   activeId: 'a',
   engine: { running: true, lastTickAt: t, nextTickAt: null, unknownLogin: 'z@x' },
 }
@@ -55,6 +56,7 @@ describe('dto', () => {
       enabled: true,
       needsReauth: false,
       addedAt: '2026-11-01T00:00:00.000Z',
+      status: 'ok',
     })
     expect(dto.usage.a).toEqual({
       fiveHour: { utilization: 50, resetsAt: t.toISOString() },
