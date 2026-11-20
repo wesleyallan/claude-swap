@@ -111,9 +111,9 @@ src/
     dto.ts           domain → DTO (never includes tokens)
     main.ts          start engine + HTTP server, graceful shutdown (SIGTERM)
   web/
-    main.tsx, router.tsx, routes/ (index, accounts.new modal, settings modal,
-    accounts.$id.remove confirm modal), features/{dashboard,accounts,settings,activity},
-    components/ui (shadcn), lib/{api.ts, query.ts}, i18n/
+    main.tsx, app.tsx (providers), router.tsx (code-based routes incl. modal routes),
+    features/{shell,dashboard,accounts,settings,activity}, components/ui (shadcn),
+    components/route-modal.tsx, lib/{api.ts, query.ts}, i18n/{index.ts, messages/*.json}
 tests/e2e/           Playwright specs, fixtures (temp HOME), mock-anthropic server
 deploy/              claude-swap.service (systemd user unit), install script
 ```
@@ -137,7 +137,7 @@ Separating secrets from preferences keeps the user-editable config safe to open,
   status (ok / exhausted / needs re-auth / disabled), `Use now`, enable switch, remove.
 - Modals are **routes** (`/accounts/new`, `/settings`, `/accounts/:id/remove`) rendered over the
   dashboard (TanStack Router masking / layout outlet), so they are linkable and back-button safe.
-- Theme + locale persist in `config.json`; the server injects `class="dark"` and `lang` into
+- Theme + locale persist in `config.json`; the server injects `class="dark|light"` and `lang` into
   `index.html` → no flash. Data refresh: TanStack Query polling (10 s) while the tab is visible.
 - Quality bar: DESIGN.md tokens, WCAG AA contrast in both themes, full keyboard support,
   `prefers-reduced-motion`, responsive down to 360 px.
@@ -284,9 +284,39 @@ Separating secrets from preferences keeps the user-editable config safe to open,
 - 2026-11-19 — **Static**: `dist/web` (default `../web` next to the bundled `main.js`, override with
   `CLAUDE_SWAP_WEB_DIR`). `/assets/*` → `Cache-Control: public, max-age=31536000, immutable`, a miss
   is 404 (never the SPA); other files `no-cache`; every other GET returns `index.html` (`no-cache`)
-  with `<html lang="<locale>">` plus `class="dark"` only for `theme: dark` (`system` is resolved
-  client-side). No build → 503. `secureHeaders()` defaults only; no CSP yet (T08/T13 may add one).
+  with `<html lang="<locale>">` plus `class="dark"`/`class="light"` for an explicit theme (none for
+  `system`; changed in T08). No build → 503. `secureHeaders()` defaults only; no CSP yet (T08/T13 may add one).
 - 2026-11-19 — **Dev proxy**: Vite proxies `/api` with `changeOrigin` and rewrites a same-origin
   (`http://<vite host>`) `Origin` to the API origin, so the guard needs no dev exception.
 - 2026-11-19 — **Runtime** (`server/main.ts`): binds `127.0.0.1:${PORT:-4747}`, logs `listening`
   then starts the engine; SIGINT/SIGTERM stop the engine, close the server and force-exit after 5 s.
+- 2026-11-19 — **Theme without a script** (T08): `<html class="dark|light">` forces a theme, no class
+  = `system`. CSS does the rest: `color-scheme` on `:root` + every color token written once as
+  `light-dark(light, dark)`, and Tailwind's `dark:` variant is a custom variant matching `.dark` or
+  `prefers-color-scheme: dark` under `:root:not(.light)`. No inline script, so no flash and no CSP
+  hash needed (CSP stays for T13: all scripts/fonts/styles are same-origin, but Base UI/Recharts
+  set inline `style` attributes, so it needs `style-src 'self' 'unsafe-inline'`). The client mirrors the cached preferences onto `<html>` (class + `lang`) in an effect.
+- 2026-11-19 — **Primary coral deepened for AA** (T08): DESIGN.md `#cc785c` with white text is 3.3:1,
+  below the WCAG AA bar of §6. Buttons use `--primary: #ae5c3f` (4.8:1 with white), pressed/hover
+  `#8f4630`; the original coral stays as `--brand` (logo, chart-1, dark-mode focus ring).
+- 2026-11-19 — **Fonts** (T08): self-hosted via `@fontsource-variable` (bundled by Vite, no Google
+  calls): **Newsreader** (serif display, `font-heading`, stands in for Copernicus/Tiempos) +
+  **Inter** (body). JetBrains Mono not added until code text is shown.
+- 2026-11-19 — **shadcn/ui** (T08): style `base-maia` on **Base UI** (`@base-ui/react`), icons
+  `lucide-react`, `cn` from the `cn` package; components in `src/web/components/ui`, restyled to
+  DESIGN.md (8 px buttons/inputs at 40 px, 12/16 px cards/dialogs, pill badges via the `--radius-*`
+  pins). The `shadcn` package is a devDependency (CLI + `shadcn/tailwind.css`, build-time only).
+  Biome parses Tailwind directives (`css.parser.tailwindDirectives`). DESIGN.md type sizes are
+  `text-display-*`/`text-title-*`/`text-caption` utilities; they are unknown to `cn`'s merge, so
+  never pass them to override a component's own `text-*` class (edit the component instead).
+- 2026-11-19 — **Router** (T08): TanStack Router **code-based** (`src/web/router.tsx`, no codegen
+  plugin). Root layout = skip link + header + `<main>`; a pathless `dashboard` route renders the
+  dashboard plus an `<Outlet>` whose children (`/`, `/settings`, `/accounts/new`) are the modal
+  routes, each a `RouteModal` (Base UI dialog, closing navigates to `/`). T08 ships the two modals
+  as title-only placeholders.
+- 2026-11-19 — **Client data** (T08): one `['dashboard']` query (refetch 10 s, paused while the tab
+  is hidden, `retry: 1`); preferences come from it, falling back to what the server rendered into
+  `<html>` until it loads. `PATCH /preferences` updates that cache optimistically, rolls back on
+  error and refetches on settle. The header theme toggle only flips light/dark (from the resolved
+  theme); `system` is chosen in Settings. Locale catalogs are bundled statically (small);
+  `IntlProvider` gets the browser `timeZone`. `lib/api.ts` = `hc<AppType>('/').api` + `parseResponse`.

@@ -12,7 +12,7 @@ Read `AGENTS.md` and `docs/architecture.md` first; the architecture doc is the s
 | T05 | [Anthropic usage & OAuth client](T05-anthropic-client.md) | [x] |
 | T06 | [Use cases & rotation engine](T06-engine.md) | [x] |
 | T07 | [HTTP server (Hono) & runtime](T07-server.md) | [x] |
-| T08 | [Web foundation: design system, theme, i18n, router](T08-web-foundation.md) | [ ] |
+| T08 | [Web foundation: design system, theme, i18n, router](T08-web-foundation.md) | [x] |
 | T09 | [Dashboard: charts & sortable account list](T09-dashboard.md) | [ ] |
 | T10 | [Modal routes: add account, settings, remove](T10-modals.md) | [ ] |
 | T11 | [End-to-end test suite](T11-e2e.md) | [ ] |

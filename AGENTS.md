@@ -61,7 +61,8 @@ src/
                    Anthropic HTTP client, clock, logger.
   server/          Composition root (container.ts), main.ts, Hono app + routes, DTO mappers,
                    static SPA serving. Thin: validate input, call a use case, map to DTO.
-  web/             React SPA: routes/, components/ (ui/ = shadcn primitives), features/,
+  web/             React SPA: router.tsx (code-based routes), components/ (ui/ = shadcn
+                   primitives, add with `npx shadcn@latest add <name>`), features/,
                    lib/api.ts (Hono RPC client), i18n/messages/{en,es,pt-BR}.json
 tests/e2e/         Playwright specs + mock Anthropic API server
 ```
