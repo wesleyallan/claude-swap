@@ -98,6 +98,8 @@ export class AnthropicClient implements UsageApi, TokenRefresher {
       // Name only: the original error (and its cause) could echo request details.
       throw new NetworkError(err instanceof Error ? err.name : 'unknown')
     }
+    // Unread bodies keep undici's connection busy until GC: release them before throwing.
+    if (res.status === 401 || res.status === 429) await res.body?.cancel().catch(() => {})
     if (res.status === 401) throw new UnauthorizedError()
     if (res.status === 429) {
       throw new RateLimitedError(retryAfterSeconds(res.headers.get('retry-after'), this.deps.clock))

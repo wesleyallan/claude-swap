@@ -190,6 +190,16 @@ describe('error mapping', () => {
         expect(await failure(call())).toBeInstanceOf(UnauthorizedError)
       })
 
+      it.each([401, 429])(
+        '%i releases the connection (body cancelled, not left unread)',
+        async (status) => {
+          const cancel = vi.fn()
+          fetchMock.mockResolvedValueOnce(new Response(new ReadableStream({ cancel }), { status }))
+          await failure(call())
+          expect(cancel).toHaveBeenCalled()
+        },
+      )
+
       it('400 invalid_grant → InvalidGrant', async () => {
         respond(
           { error: 'invalid_grant', error_description: 'Invalid refresh token' },
