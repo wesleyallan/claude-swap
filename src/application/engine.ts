@@ -21,11 +21,11 @@ import type {
   UsageApi,
 } from './ports'
 
-export const REFRESH_WINDOW_MS = 10 * 60_000
+const REFRESH_WINDOW_MS = 10 * 60_000
 export const DEBOUNCE_MS = 250
 /** Backoff after a 429 without a usable `Retry-After`. */
-export const DEFAULT_BACKOFF_SEC = 600
-export const POLL_CONCURRENCY = 2
+const DEFAULT_BACKOFF_SEC = 600
+const POLL_CONCURRENCY = 2
 
 export interface RunOptions {
   /** The run follows a user reorder/promote/enable: a resulting swap is labelled `manual`. */

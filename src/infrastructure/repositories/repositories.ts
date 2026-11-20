@@ -68,9 +68,9 @@ export class JsonSecretsRepository implements SecretsRepository {
 }
 
 const HOUR = 3_600_000
-export const HISTORY_MAX_AGE_MS = 7 * 24 * HOUR
-export const HISTORY_FULL_RES_MS = 24 * HOUR
-export const HISTORY_BUCKET_MS = 15 * 60_000
+const HISTORY_MAX_AGE_MS = 7 * 24 * HOUR
+const HISTORY_FULL_RES_MS = 24 * HOUR
+const HISTORY_BUCKET_MS = 15 * 60_000
 export const HISTORY_CAP = 10_000
 export const ACTIVITY_CAP = 200
 

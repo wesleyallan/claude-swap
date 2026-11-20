@@ -77,7 +77,7 @@ export class MemorySecretsRepository implements SecretsRepository {
   }
 }
 
-export const emptyState = (): AppState => ({
+const emptyState = (): AppState => ({
   usage: {},
   history: [],
   activity: [],

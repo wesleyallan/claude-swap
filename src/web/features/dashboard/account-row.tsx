@@ -17,7 +17,7 @@ const statusDot: Record<AccountStatus, string> = {
   unknown: 'border border-muted-foreground',
 }
 
-export function StatusChip({ status }: { status: AccountStatus }) {
+function StatusChip({ status }: { status: AccountStatus }) {
   const t = useTranslations('accounts.status')
   return (
     <Badge variant="outline" className="gap-1.5">

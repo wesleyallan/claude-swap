@@ -14,7 +14,7 @@ const percent = z.number().min(0).max(100)
 const P = DEFAULT_PREFERENCES
 
 // Per-field defaults: a hand-edited config missing a key keeps the rest instead of being reset.
-export const preferencesSchema = z.object({
+const preferencesSchema = z.object({
   theme: z.enum(['light', 'dark', 'system']).default(P.theme),
   locale: z.enum(['en', 'es', 'pt-BR']).default(P.locale),
   autoRotate: z.boolean().default(P.autoRotate),
@@ -33,7 +33,7 @@ export const oauthAccountSchema = z.looseObject({
   emailAddress: z.string(),
 })
 
-export const accountSchema = z.object({
+const accountSchema = z.object({
   id: z.string().min(1),
   label: z.string(),
   email: z.string(),
@@ -63,21 +63,21 @@ export const secretsSchema = z.object({ tokens: z.record(z.string(), oauthTokens
 
 const usageWindow = z.object({ utilization: z.number(), resetsAt: isoDate.nullable() })
 
-export const usageSnapshotSchema = z.object({
+const usageSnapshotSchema = z.object({
   fiveHour: usageWindow.nullable(),
   sevenDay: usageWindow.nullable(),
   fetchedAt: isoDate,
   error: z.string().exactOptional(),
 })
 
-export const historyPointSchema = z.object({
+const historyPointSchema = z.object({
   t: isoDate,
   accountId: z.string(),
   fiveHour: z.number().nullable(),
   sevenDay: z.number().nullable(),
 })
 
-export const activityEntrySchema = z.discriminatedUnion('type', [
+const activityEntrySchema = z.discriminatedUnion('type', [
   z.object({
     t: isoDate,
     type: z.literal('swap'),

@@ -2,7 +2,7 @@ import { useFormatter, useNow, useTranslations } from 'use-intl'
 import { Progress } from '@/web/components/ui/progress'
 import { type Tone, usageTone } from './model'
 
-export const toneBg: Record<Tone, string> = {
+const toneBg: Record<Tone, string> = {
   success: 'bg-success',
   warning: 'bg-warning',
   error: 'bg-destructive',
