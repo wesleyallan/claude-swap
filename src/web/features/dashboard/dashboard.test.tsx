@@ -233,7 +233,9 @@ it('flags an unknown Claude Code login and imports it', async () => {
   expect(within(await list()).queryByText('Active')).not.toBeInTheDocument()
   await user.click(screen.getByRole('button', { name: 'Import account' }))
   await waitFor(() =>
-    expect(requests).toEqual([{ method: 'POST', path: '/api/accounts/import', body: undefined }]),
+    expect(requests).toEqual([
+      { method: 'POST', path: '/api/accounts/import', body: { label: '' } },
+    ]),
   )
 })
 

@@ -156,6 +156,34 @@ describe('api', () => {
     expect(config.data.accounts.map((a) => a.id)).toEqual(['a', 'b', 'c'])
   })
 
+  it('POST /accounts/import takes an optional label (validated)', async () => {
+    session.live = {
+      oauth: fakeTokens('c', 0),
+      account: { accountUuid: 'c', emailAddress: 'c@example.test' },
+    }
+    const post = (body: unknown) =>
+      req('/api/accounts/import', {
+        method: 'POST',
+        headers: { ...SAME_ORIGIN, 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+    expect((await post({ label: 'x'.repeat(101) })).status).toBe(400)
+    expect((await post({ label: 'Work', extra: 1 })).status).toBe(400)
+    const res = await post({ label: '  Work ' })
+    expect(res.status).toBe(201)
+    expect(await res.json()).toMatchObject({ id: 'c', label: 'Work' })
+  })
+
+  it('GET /accounts/current reports the live login, never tokens', async () => {
+    expect(await (await req('/api/accounts/current')).json()).toEqual({ login: null })
+    session.live = { oauth: fakeTokens('a', 0), account: fakeAccount('a').oauthAccount }
+    const body = await (await req('/api/accounts/current')).json()
+    expect(body).toEqual({
+      login: { id: 'a', email: fakeAccount('a').oauthAccount.emailAddress, known: true },
+    })
+    expect(JSON.stringify(body)).not.toMatch(/fake-|token/i)
+  })
+
   it('POST /accounts/import → 409 when Claude Code is not logged in', async () => {
     const res = await req('/api/accounts/import', { method: 'POST' })
     expect(res.status).toBe(409)

@@ -13,6 +13,7 @@ import {
   SimpleMutex,
 } from '../testing/fakes'
 import {
+  getCurrentLogin,
   getDashboard,
   importCurrentLogin,
   NotLoggedInError,
@@ -113,6 +114,39 @@ describe('importCurrentLogin', () => {
     expect(order(d)).toEqual(['a', 'b'])
     expect(await d.secrets.get('a')).toEqual(fakeTokens('a2', 9))
     expect(d.state.data.activity).toEqual([])
+  })
+
+  it('applies a trimmed label to a new or re-imported account; blank keeps the default', async () => {
+    const d = setup()
+    d.session.live = {
+      oauth: fakeTokens('n', 5),
+      account: { accountUuid: 'n', emailAddress: 'n@x.test' },
+    }
+    expect(await importCurrentLogin(d, { label: '  Work  ' })).toMatchObject({ label: 'Work' })
+    expect(await importCurrentLogin(d, { label: '   ' })).toMatchObject({ label: 'Work' })
+    d.session.live = { oauth: fakeTokens('a2', 9), account: fakeAccount('a').oauthAccount }
+    expect(await importCurrentLogin(d, { label: 'Personal' })).toMatchObject({ label: 'Personal' })
+  })
+})
+
+describe('getCurrentLogin', () => {
+  it('is null when Claude Code is not logged in', async () => {
+    expect(await getCurrentLogin(setup())).toBeNull()
+  })
+
+  it('reports the live login and whether it is one of ours', async () => {
+    const d = setup()
+    d.session.live = {
+      oauth: fakeTokens('n', 5),
+      account: { accountUuid: 'n', emailAddress: 'n@x.test' },
+    }
+    expect(await getCurrentLogin(d)).toEqual({ id: 'n', email: 'n@x.test', known: false })
+    d.session.live = { oauth: fakeTokens('a', 5), account: fakeAccount('a').oauthAccount }
+    expect(await getCurrentLogin(d)).toEqual({
+      id: 'a',
+      email: fakeAccount('a').oauthAccount.emailAddress,
+      known: true,
+    })
   })
 })
 

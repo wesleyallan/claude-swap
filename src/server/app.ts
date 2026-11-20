@@ -8,6 +8,7 @@ import { HTTPException } from 'hono/http-exception'
 import { secureHeaders } from 'hono/secure-headers'
 import { z } from 'zod'
 import {
+  getCurrentLogin,
   getDashboard,
   importCurrentLogin,
   NotLoggedInError,
@@ -39,6 +40,8 @@ const accountPatch = z
   .strictObject({ label: z.string().trim().min(1).max(100), enabled: z.boolean() })
   .partial()
   .refine((p) => p.label !== undefined || p.enabled !== undefined, 'Nothing to update')
+// Blank = keep the default label (the use case trims). No body / no JSON content type reads as {}.
+const importBody = z.strictObject({ label: z.string().max(100) }).partial()
 const orderBody = z.strictObject({ ids: z.array(z.string().min(1)).max(1000) })
 const idParam = z.object({ id: z.string().min(1) })
 
@@ -91,8 +94,9 @@ export function createApp(c: Container) {
   const api = new Hono()
     .get('/health', (ctx) => ctx.json({ status: 'ok' as const }))
     .get('/dashboard', async (ctx) => ctx.json(toDashboardDto(await getDashboard(c))))
-    .post('/accounts/import', async (ctx) =>
-      ctx.json(toAccountDto(await importCurrentLogin(c)), 201),
+    .get('/accounts/current', async (ctx) => ctx.json({ login: await getCurrentLogin(c) }))
+    .post('/accounts/import', validate('json', importBody), async (ctx) =>
+      ctx.json(toAccountDto(await importCurrentLogin(c, ctx.req.valid('json'))), 201),
     )
     .put('/accounts/order', validate('json', orderBody), async (ctx) => {
       await reorderAccounts(c, ctx.req.valid('json').ids)

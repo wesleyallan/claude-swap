@@ -57,11 +57,32 @@ async function updateAccounts(
 const patchAccount = (d: UseCaseDeps, id: AccountId, patch: Partial<StoredAccount>) =>
   updateAccounts(d, id, (list) => list.map((a) => (a.id === id ? { ...a, ...patch } : a)))
 
+export interface CurrentLogin {
+  readonly id: AccountId
+  readonly email: string
+  /** Already in our list: importing it again only refreshes its tokens. */
+  readonly known: boolean
+}
+
+/** Who Claude Code is logged in as right now (`null` when it is not), for the "Add account" modal. */
+export async function getCurrentLogin(d: UseCaseDeps): Promise<CurrentLogin | null> {
+  const login = await d.session.readCurrentLogin()
+  if (!login) return null
+  const { accountUuid: id, emailAddress: email } = login.account
+  const known = (await d.config.load()).accounts.some((a) => a.id === id)
+  return { id, email, known }
+}
+
 /**
  * Snapshots the live Claude Code login (tokens + identity). New accounts go to the bottom of the
  * list; re-importing an existing one refreshes its tokens/identity and clears `needsReauth`.
+ * A non-blank `label` (trimmed) names the account, new or re-imported.
  */
-export async function importCurrentLogin(d: UseCaseDeps): Promise<StoredAccount> {
+export async function importCurrentLogin(
+  d: UseCaseDeps,
+  opts: { label?: string | undefined } = {},
+): Promise<StoredAccount> {
+  const label = opts.label?.trim() || undefined
   const account = await d.mutex.run(async () => {
     const login = await d.session.readCurrentLogin()
     if (!login) throw new NotLoggedInError()
@@ -76,10 +97,10 @@ export async function importCurrentLogin(d: UseCaseDeps): Promise<StoredAccount>
       oauthAccount: identity,
     }
     const saved: StoredAccount = existing
-      ? { ...existing, ...fresh }
+      ? { ...existing, ...fresh, ...(label && { label }) }
       : {
           id: identity.accountUuid,
-          label: str(identity.displayName) ?? identity.emailAddress,
+          label: label ?? str(identity.displayName) ?? identity.emailAddress,
           enabled: true,
           addedAt: d.clock.now(),
           ...fresh,

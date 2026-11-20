@@ -22,4 +22,8 @@ export const promoteAccount = (id: string) =>
   parseResponse(api.accounts[':id'].promote.$post({ param: { id } }))
 export const setAccountEnabled = ({ id, enabled }: { id: string; enabled: boolean }) =>
   parseResponse(api.accounts[':id'].$patch({ param: { id }, json: { enabled } }))
-export const importCurrentLogin = () => parseResponse(api.accounts.import.$post())
+export const importCurrentLogin = (label = '') =>
+  parseResponse(api.accounts.import.$post({ json: { label } }))
+export const fetchCurrentLogin = () => parseResponse(api.accounts.current.$get())
+export const removeAccount = (id: string) =>
+  parseResponse(api.accounts[':id'].$delete({ param: { id } }))
