@@ -37,7 +37,7 @@ export function renderUnit(template: string, o: Pick<ServiceOptions, 'node' | 'r
 
 export async function install(o: ServiceOptions): Promise<string> {
   const path = unitFile(o)
-  if (o.checkBuild && !existsSync(join(o.repo, 'dist/server/main.js')))
+  if (o.checkBuild && !o.dryRun && !existsSync(join(o.repo, 'dist/server/main.js')))
     throw new Error('dist/server/main.js is missing: run `npm run build` first')
   const unit = renderUnit(await readFile(join(REPO, 'deploy', UNIT), 'utf8'), o)
   const steps = [
