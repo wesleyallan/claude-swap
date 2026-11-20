@@ -1,0 +1,32 @@
+# systemd user unit. Installed by `npm run service:install`, which fills in the
+# absolute node binary and repository paths. Do not copy by hand.
+[Unit]
+Description=claude-swap: rotates Claude accounts for Claude Code
+Documentation=file://@REPO@/README.md
+
+[Service]
+Type=simple
+ExecStart="@NODE@" "@REPO@/dist/server/main.js"
+WorkingDirectory=@REPO@
+Environment=PORT=4747
+Environment=NODE_ENV=production
+Restart=on-failure
+RestartSec=5
+UMask=0077
+
+# Hardening that works in a user manager (no root needed). The service must keep
+# write access to ~/.claude, ~/.claude.json and ~/.config/claude-swap, so the home
+# directory stays writable. PrivateTmp/ProtectSystem need unprivileged user
+# namespaces; where the kernel forbids them systemd logs a notice and runs without.
+NoNewPrivileges=yes
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+SystemCallArchitectures=native
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+PrivateTmp=yes
+ProtectSystem=full
+
+[Install]
+WantedBy=default.target
