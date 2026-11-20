@@ -16,7 +16,7 @@ Read `AGENTS.md` and `docs/architecture.md` first; the architecture doc is the s
 | T09 | [Dashboard: charts & sortable account list](T09-dashboard.md) | [x] |
 | T10 | [Modal routes: add account, settings, remove](T10-modals.md) | [x] |
 | T11 | [End-to-end test suite](T11-e2e.md) | [x] |
-| T12 | [Service install, README & performance budget](T12-deploy.md) | [ ] |
+| T12 | [Service install, README & performance budget](T12-deploy.md) | [x] |
 | T13 | [Final review & hardening](T13-review.md) | [ ] |
 
 ## Protocol for every task
