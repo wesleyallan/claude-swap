@@ -6,6 +6,16 @@ export default defineConfig({
   plugins: [react()],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   test: {
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/**/*.test.{ts,tsx}', 'src/web/test-setup.ts'],
+      reporter: ['text-summary'],
+      // domain holds the business rules: every branch must be tested (AGENTS.md).
+      thresholds: {
+        'src/domain/**': { statements: 100, branches: 100, functions: 100, lines: 100 },
+      },
+    },
     projects: [
       {
         extends: true,
