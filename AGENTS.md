@@ -48,6 +48,8 @@ for Hono, Vite, TanStack Router/Query, use-intl, Tailwind v4, shadcn, dnd-kit, P
 | Unit + integration tests (+ coverage, 100 % on `src/domain`) | `npm test` (watch: `npm run test:watch`) |
 | E2E tests (builds first) | `npm run test:e2e` |
 | Everything CI runs | `npm run check` |
+| Bundle size + idle RSS budget | `npm run perf:budget` |
+| systemd user service | `npm run service:install` / `service:uninstall` (never in tests) |
 
 `npm run check` must pass before every commit. (Commands exist from task T01 on.)
 
@@ -65,6 +67,8 @@ src/
                    primitives, add with `npx shadcn@latest add <name>`), features/,
                    lib/api.ts (Hono RPC client), i18n/messages/{en,es,pt-BR}.json
 tests/e2e/         Playwright specs + mock Anthropic API server
+deploy/            systemd user unit template
+scripts/           service install/uninstall, perf budget (run with node / tsx)
 ```
 
 Rules:

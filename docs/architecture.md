@@ -375,3 +375,24 @@ Separating secrets from preferences keeps the user-editable config safe to open,
   light and dark.
 - 2026-11-19 — **Dark destructive token** (T11): axe found the destructive button text at 3.85:1 on
   its dark tint. Dark `--destructive` `#e5736b` → `#f0948c`, button tint 20 → 15 % (hover 20 %).
+- 2026-11-19 — **Server bundle is self-contained** (T12): tsup bundles every npm dependency
+  (`noExternal: [/.*/]`), so `dist/server/main.js` runs without `node_modules` (building still needs
+  them). zod is imported as `import * as z from 'zod'` everywhere: with `import { z }` esbuild keeps
+  all zod locales (bundle 910 → 368 kB, idle RSS −8 MB). Keep the namespace form.
+- 2026-11-19 — **Initial JS budget** (T12): entry + modulepreloads < 200 kB gzip, measured by
+  `npm run perf:budget` from `dist/web/index.html`. The account list (dnd-kit) and the header locale
+  select (Base UI Select + floating-ui) are `React.lazy` with skeleton fallbacks, like the chart:
+  initial JS 239 → 161 kB gzip.
+- 2026-11-19 — **CLI** (T12): `main.ts` takes `--port <1-65535>` (wins over `PORT`) and `--open`
+  (`xdg-open`, failure only logged), parsed by `server/cli.ts` with `util.parseArgs` (strict; bad
+  input exits 2 with usage).
+- 2026-11-19 — **systemd user unit** (T12): `deploy/claude-swap.service` is a template
+  (`@NODE@`/`@REPO@`) filled by `scripts/service.ts` (plain Node type stripping, no deps) with
+  `process.execPath` and the repo path, because the user manager's PATH misses nvm/fnm installs.
+  Hardening limited to what works unprivileged: `NoNewPrivileges`, `LockPersonality`,
+  `RestrictRealtime`, `RestrictSUIDSGID`, `RestrictNamespaces`, `SystemCallArchitectures=native`,
+  `RestrictAddressFamilies`, `UMask=0077`, plus `PrivateTmp` + `ProtectSystem=full` (need
+  unprivileged user namespaces; silently skipped where unavailable). No `ProtectHome` (the service
+  writes `~/.claude*`), no `MemoryDenyWriteExecute` (breaks V8's JIT). Verified with a transient
+  `systemd-run --user` unit against temp dirs + the mock. `--jitless`/`--lite-mode` were rejected:
+  they remove `WebAssembly`, which Node's `fetch` (undici llhttp) needs.
