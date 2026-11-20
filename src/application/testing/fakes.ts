@@ -165,6 +165,12 @@ export class FakeEngine implements EngineControl {
   status() {
     return this.current
   }
+  start() {
+    this.current = { ...this.current, running: true }
+  }
+  stop() {
+    this.current = { ...this.current, running: false }
+  }
 }
 
 /** Fake but well-formed account + identity + tokens. */
