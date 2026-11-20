@@ -2,7 +2,7 @@
 import type { AccountId } from '@/domain/account'
 import { type SelectionReason, selectActiveAccount } from '@/domain/rotation-policy'
 import type { UsageSnapshot } from '@/domain/usage'
-import { InvalidGrantError, RateLimitedError } from './anthropic-errors'
+import { InvalidGrantError, RateLimitedError, UnauthorizedError } from './anthropic-errors'
 import type {
   ActivityEntry,
   AppConfig,
@@ -13,6 +13,7 @@ import type {
   HistoryPoint,
   Logger,
   Mutex,
+  OAuthTokens,
   SecretsRepository,
   StateRepository,
   StoredAccount,
@@ -214,15 +215,23 @@ export class Engine implements EngineControl {
       if (a.id === t.liveId || a.needsReauth) continue
       const tokens = await this.#d.secrets.get(a.id)
       if (!tokens || tokens.expiresAt > deadline) continue
-      try {
-        await this.#d.secrets.set(a.id, await this.#d.refresher.refresh(tokens))
-      } catch (err) {
-        if (err instanceof InvalidGrantError) {
-          setAccount(t, a.id, { needsReauth: true })
-          record(t, { t: this.#d.clock.now(), type: 'needs-reauth', accountId: a.id })
-        }
-        this.#d.logger.warn('token refresh failed', { accountId: a.id, error: message(err) })
+      await this.#refresh(t, a.id, tokens)
+    }
+  }
+
+  /** Refreshes and persists one inactive account's tokens; `null` when the refresh failed. */
+  async #refresh(t: Tick, id: AccountId, tokens: OAuthTokens): Promise<OAuthTokens | null> {
+    try {
+      const next = await this.#d.refresher.refresh(tokens)
+      await this.#d.secrets.set(id, next)
+      return next
+    } catch (err) {
+      if (err instanceof InvalidGrantError) {
+        setAccount(t, id, { needsReauth: true })
+        record(t, { t: this.#d.clock.now(), type: 'needs-reauth', accountId: id })
       }
+      this.#d.logger.warn('token refresh failed', { accountId: id, error: message(err) })
+      return null
     }
   }
 
@@ -239,8 +248,19 @@ export class Engine implements EngineControl {
       for (let a = queue.shift(); a; a = queue.shift()) {
         const tokens = await secrets.get(a.id)
         if (!tokens) continue
+        const poll = async () => {
+          try {
+            return await usageApi.fetchUsage(tokens.accessToken)
+          } catch (err) {
+            // Revoked before expiresAt: an inactive account's tokens are ours, refresh and retry once.
+            if (!(err instanceof UnauthorizedError) || a.id === t.liveId) throw err
+            const fresh = await this.#refresh(t, a.id, tokens)
+            if (!fresh) throw err
+            return usageApi.fetchUsage(fresh.accessToken)
+          }
+        }
         try {
-          results.push([a.id, await usageApi.fetchUsage(tokens.accessToken)])
+          results.push([a.id, await poll()])
           this.#backoff.delete(a.id)
         } catch (err) {
           if (err instanceof RateLimitedError) {

@@ -1,7 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DEFAULT_PREFERENCES, type Preferences } from '@/domain/preferences'
 import type { UsageSnapshot } from '@/domain/usage'
-import { InvalidGrantError, NetworkError, RateLimitedError } from './anthropic-errors'
+import {
+  InvalidGrantError,
+  NetworkError,
+  RateLimitedError,
+  UnauthorizedError,
+} from './anthropic-errors'
 import { DEBOUNCE_MS, Engine } from './engine'
 import type { StoredAccount } from './ports'
 import {
@@ -224,6 +229,34 @@ describe('Engine tick', () => {
     s.clock.advance(6 * MIN)
     await s.engine.tick()
     expect(s.usageApi.calls).toContain('fake-access-b')
+  })
+
+  it('401 on an inactive account → refreshes it at once and polls again with the new token', async () => {
+    const s = setup()
+    const good = s.usageApi.byToken.get('fake-access-b')
+    s.usageApi.byToken.set('fake-access-b', new UnauthorizedError())
+    s.usageApi.byToken.set('fake-access-b+r', good as never)
+    await s.engine.tick()
+    expect(s.refresher.calls.map((c) => c.accessToken)).toEqual(['fake-access-b'])
+    expect((await s.secrets.get('b'))?.accessToken).toBe('fake-access-b+r')
+    expect(s.state.data.usage.b).toEqual(good)
+  })
+
+  it('401 on an inactive account whose refresh is refused → needsReauth', async () => {
+    const s = setup()
+    s.usageApi.byToken.set('fake-access-b', new UnauthorizedError())
+    s.refresher.next = () => new InvalidGrantError()
+    await s.engine.tick()
+    expect(s.config.data.accounts[1]?.needsReauth).toBe(true)
+    expect(s.state.data.usage.b?.error).toMatch(/401/)
+  })
+
+  it('401 on the live account → never refreshed (Claude Code owns it), error snapshot', async () => {
+    const s = setup()
+    s.usageApi.byToken.set('fake-access-a', new UnauthorizedError())
+    await s.engine.tick()
+    expect(s.refresher.calls).toEqual([])
+    expect(s.state.data.usage.a?.error).toMatch(/401/)
   })
 
   it('rate limit without Retry-After uses the default backoff', async () => {

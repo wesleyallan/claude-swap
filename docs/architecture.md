@@ -261,8 +261,9 @@ Separating secrets from preferences keeps the user-editable config safe to open,
   for successful polls. 429 → no polls for that account until `now + retryAfter` (default 600 s),
   in-memory only. Refresh covers every non-live, non-`needsReauth` account (disabled too, to keep its
   refresh token alive); other refresh errors are logged and retried next tick. A fresh `/login` of a
-  `needsReauth` account (new refresh token seen at sync-back) clears the flag. A 401 on poll does not
-  force a refresh (the 10-min window handles normal expiry).
+  `needsReauth` account (new refresh token seen at sync-back) clears the flag. A 401 on poll of an
+  **inactive** account refreshes it at once and retries the poll once (T13; `invalid_grant` there →
+  `needsReauth`); a 401 on the live account is only recorded (Claude Code owns its tokens).
 - 2026-11-19 — **Logger** (`infrastructure/system/logger.ts`, `JsonLogger`): one JSON line per call
   (`{t, level, msg, ...fields}`; `error` to stderr). Fields are deep-redacted: keys matching
   `/token|secret|authorization|password|cookie/i` → `[redacted]`, and `sk-ant-…` / `Bearer …`
