@@ -13,7 +13,7 @@ keeps exactly one account active in Claude Code and:
 - **swaps back up** to a higher-priority account as soon as its limit resets;
 - supports **manual swap**: promoting an account (changing the order) makes it active.
 
-It runs as **one lightweight Node process** (systemd user service, target < 80 MB RSS idle) that
+It runs as **one lightweight Node process** (systemd user service, target < 100 MB RSS idle) that
 hosts the engine and a small JSON API, and serves a static React SPA. The web UI is optional —
 the engine works with no browser open. No database: all state lives in JSON files.
 

@@ -36,7 +36,7 @@ One Node process, bound to `127.0.0.1:${PORT:-4747}`, run as a systemd **user** 
 The process is the **single writer** of all our files, so no file locks are needed; an in-process
 async mutex serializes writes and engine ticks vs. API mutations.
 
-Lightness budget: idle RSS < 80 MB, idle CPU ≈ 0 (one tick per poll interval). The SPA is static
+Lightness budget: idle RSS < 100 MB, idle CPU ≈ 0 (one tick per poll interval). The SPA is static
 files; heavy UI deps (Recharts, dnd-kit) never load in the server.
 
 ## 3. Claude Code integration (Linux)
@@ -396,3 +396,9 @@ Separating secrets from preferences keeps the user-editable config safe to open,
   writes `~/.claude*`), no `MemoryDenyWriteExecute` (breaks V8's JIT). Verified with a transient
   `systemd-run --user` unit against temp dirs + the mock. `--jitless`/`--lite-mode` were rejected:
   they remove `WebAssembly`, which Node's `fetch` (undici llhttp) needs.
+- 2026-11-20 — **Idle RSS budget 80 → 100 MB** (T12, owner's call): measured 88.9 MB after 30 s idle
+  with two accounts. Node 24 + `http` + `fetch` alone is ~63 MB and ~52 MB of our RSS is the node
+  binary's shared, file-backed code; live heap after GC is ~13 MB. Reaching 80 MB needed V8/malloc
+  flags (`MALLOC_ARENA_MAX=1`, `--max-semi-space-size=1`, `--optimize-for-size`: 79.8–81.6 MB,
+  flaky, CPU cost) or a `zod/mini` rewrite; both rejected. `perf:budget` asserts VmRSS < 100 MB and
+  also prints RssAnon (~38 MB) / RssFile for information.

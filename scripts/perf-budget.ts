@@ -1,6 +1,6 @@
 // `npm run perf:budget`: checks the built app against the T12 budget.
 // - initial JS (entry + modulepreloads in dist/web/index.html) < 200 kB gzip, chart chunk lazy;
-// - server RSS < 80 MB after 30 s idle with two accounts, using temp HOME / CLAUDE_SWAP_HOME /
+// - server RSS < 100 MB after 30 s idle with two accounts, using temp HOME / CLAUDE_SWAP_HOME /
 //   CLAUDE_CONFIG_DIR and the mock Anthropic API (never the real ~/.claude or Anthropic).
 import { spawn } from 'node:child_process'
 import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
@@ -14,7 +14,7 @@ import { startMockAnthropic } from '../tests/e2e/mock-anthropic'
 const ROOT = resolve(import.meta.dirname, '..')
 const WEB = join(ROOT, 'dist/web')
 const INITIAL_JS_GZIP_MAX = 200_000
-const RSS_MAX = 80 * 1024 * 1024
+const RSS_MAX = 100 * 1024 * 1024
 const IDLE_MS = 30_000
 
 /** JS the browser loads before any lazy import: the entry script and its modulepreloads. */
@@ -114,7 +114,7 @@ async function checkRss(): Promise<boolean> {
     const mb = (k: number) => `${(k / 1024).toFixed(1)} MB`
     // RssFile is mostly the node binary's shared code pages; RssAnon is this process's own memory.
     console.log(
-      `server RSS after ${IDLE_MS / 1000} s idle: ${mb(kib('VmRSS'))} (budget 80 MB;` +
+      `server RSS after ${IDLE_MS / 1000} s idle: ${mb(kib('VmRSS'))} (budget 100 MB;` +
         ` anon ${mb(kib('RssAnon'))}, file ${mb(kib('RssFile'))})`,
     )
     return rss > 0 && rss < RSS_MAX
