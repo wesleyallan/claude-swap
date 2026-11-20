@@ -39,9 +39,11 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
     if (stopping) return
     stopping = true
     logger.info('shutting down', { signal })
-    engine.stop()
-    server.close(() => process.exit(0))
-    // Keep-alive connections can hold close() open; do not hang the service manager.
+    // Let an in-flight tick finish (a half-done refresh loses a rotated token); keep-alive
+    // connections can hold close() open: either way, do not hang the service manager.
     setTimeout(() => process.exit(0), 5_000).unref()
+    void Promise.all([engine.stop(), new Promise((r) => server.close(r))]).then(() =>
+      process.exit(0),
+    )
   })
 }

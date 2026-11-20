@@ -409,7 +409,7 @@ describe('Engine scheduling', () => {
     expect(s.engine.status().nextTickAt).toEqual(new Date(s.clock.now().getTime() + 60_000))
     await vi.advanceTimersByTimeAsync(60_000)
     expect(s.usageApi.calls).toHaveLength(2)
-    s.engine.stop()
+    await s.engine.stop()
     expect(s.engine.status()).toMatchObject({ running: false, nextTickAt: null })
     await vi.advanceTimersByTimeAsync(10 * 60_000)
     expect(s.usageApi.calls).toHaveLength(2)
@@ -432,6 +432,43 @@ describe('Engine scheduling', () => {
     await vi.advanceTimersByTimeAsync(1_000)
     expect(s.usageApi.calls).toHaveLength(3)
     s.engine.stop()
+  })
+
+  it('caps a hand-edited huge pollIntervalSec at a day (setTimeout would overflow to 1 ms)', async () => {
+    const s = setup(['a'], { pollIntervalSec: 3_000_000 })
+    s.engine.start()
+    await vi.advanceTimersByTimeAsync(DEBOUNCE_MS)
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(s.usageApi.calls).toHaveLength(1)
+    expect(s.engine.status().nextTickAt).toEqual(new Date(s.clock.now().getTime() + 86_400_000))
+    await s.engine.stop()
+  })
+
+  it('stop waits for the running tick and settles a pending runNow; start works again', async () => {
+    const s = setup(['a'])
+    let release = () => {}
+    s.usageApi.byToken.set(
+      'fake-access-a',
+      () => new Promise((r) => (release = () => r(s.usage('a', 10)))) as never,
+    )
+    s.engine.start()
+    await vi.advanceTimersByTimeAsync(DEBOUNCE_MS) // tick in flight, blocked on the poll
+    let stopped = false
+    const stop = s.engine.stop().then(() => (stopped = true))
+    await vi.advanceTimersByTimeAsync(0)
+    expect(stopped).toBe(false)
+    release()
+    await stop
+    expect(s.state.data.usage.a).toBeDefined() // the tick finished and saved before stop resolved
+
+    const pending = s.engine.runNow()
+    await s.engine.stop()
+    await pending // settled by stop, not left hanging
+    s.usage('a', 10)
+    s.engine.start()
+    await vi.advanceTimersByTimeAsync(DEBOUNCE_MS)
+    expect(s.usageApi.calls).toHaveLength(2)
+    await s.engine.stop()
   })
 
   it('runNow coalesces a burst into one tick', async () => {

@@ -21,7 +21,7 @@ import { PromiseMutex } from '@/infrastructure/system/mutex'
 
 export interface RunnableEngine extends EngineControl {
   start(): void
-  stop(): void
+  stop(): Promise<void>
 }
 
 export interface Container extends UseCaseDeps {

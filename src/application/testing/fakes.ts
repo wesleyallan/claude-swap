@@ -168,7 +168,7 @@ export class FakeEngine implements EngineControl {
   start() {
     this.current = { ...this.current, running: true }
   }
-  stop() {
+  async stop() {
     this.current = { ...this.current, running: false }
   }
 }

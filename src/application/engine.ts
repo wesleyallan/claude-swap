@@ -26,6 +26,8 @@ export const DEBOUNCE_MS = 250
 /** Backoff after a 429 without a usable `Retry-After`. */
 const DEFAULT_BACKOFF_SEC = 600
 const POLL_CONCURRENCY = 2
+/** A day. The file schema has no upper bound and Node turns a delay above 2^31-1 ms into 1 ms. */
+const MAX_INTERVAL_SEC = 86_400
 
 export interface RunOptions {
   /** The run follows a user reorder/promote/enable: a resulting swap is labelled `manual`. */
@@ -77,6 +79,7 @@ export class Engine implements EngineControl {
   #timer: ReturnType<typeof setTimeout> | undefined
   #debounce: Promise<void> | null = null
   #debounceTimer: ReturnType<typeof setTimeout> | undefined
+  #debounceResolve: (() => void) | undefined
   #manual = false
   #lastTickAt: Date | null = null
   #nextTickAt: Date | null = null
@@ -94,17 +97,22 @@ export class Engine implements EngineControl {
     void this.runNow()
   }
 
-  stop(): void {
+  /** Cancels scheduled and pending runs, then waits for a tick already in flight to finish. */
+  async stop(): Promise<void> {
     this.#running = false
     clearTimeout(this.#timer)
     clearTimeout(this.#debounceTimer)
+    this.#debounceResolve?.()
+    this.#debounce = null
     this.#nextTickAt = null
+    await this.#d.mutex.run(async () => {})
   }
 
   /** Debounced: calls within `DEBOUNCE_MS` coalesce into one tick (manual if any asked for it). */
   runNow(options: RunOptions = {}): Promise<void> {
     if (options.manual) this.#manual = true
     this.#debounce ??= new Promise<void>((resolve) => {
+      this.#debounceResolve = resolve
       this.#debounceTimer = setTimeout(() => {
         this.#debounce = null
         void this.tick().then(resolve)
@@ -125,7 +133,7 @@ export class Engine implements EngineControl {
   /** One full cycle under the mutex. Never rejects; then schedules the next tick if running. */
   async tick(): Promise<void> {
     clearTimeout(this.#timer)
-    const interval = await this.#d.mutex.run(() => this.#safeTick())
+    const interval = Math.min(await this.#d.mutex.run(() => this.#safeTick()), MAX_INTERVAL_SEC)
     this.#lastTickAt = this.#d.clock.now()
     if (this.#running) {
       this.#nextTickAt = new Date(this.#lastTickAt.getTime() + interval * 1000)
