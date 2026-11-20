@@ -94,8 +94,9 @@ src/
     ports.ts         ConfigRepository, SecretsRepository, StateRepository,
                      ClaudeCodeSession (read/write live login), UsageApi, TokenRefresher,
                      Clock, Logger
-    use-cases/       importCurrentLogin, removeAccount, reorderAccounts, promoteAccount,
-                     setAccountEnabled, updatePreferences, getDashboard
+    use-cases/       index.ts: importCurrentLogin, removeAccount, reorderAccounts, promoteAccount,
+                     setAccountEnabled, renameAccount, updatePreferences, getDashboard
+    testing/         in-memory fakes for every port (reused by server tests)
     engine.ts        tick(): sync → refresh → poll → decide → swap → record
   infrastructure/
     fs/              atomicWrite, jsonFile<T>(schema), paths (XDG + env overrides)
@@ -233,3 +234,32 @@ Separating secrets from preferences keeps the user-editable config safe to open,
   or zod failure). Error messages carry status, error name or zod field paths only — never bodies,
   headers or the original error/cause. 401/429 apply to both endpoints. `User-Agent` is
   `claude-swap/<package.json version>` (JSON import, bundled). Empty env URL overrides count as unset.
+- 2026-11-19 — **Identity snapshot**: each account in `config.json` stores the full `oauthAccount`
+  (`StoredAccount = Account & { oauthAccount }`, loose schema, every key kept) captured at import, so
+  a swap writes Claude Code's identity back unchanged (`organizationUuid`, `displayName`, …). Not a
+  secret; tokens stay in `secrets.json`. Required field at schema v1 (no released data yet).
+- 2026-11-19 — **Use cases** (`application/use-cases/index.ts`) run under the shared mutex, then call
+  `engine.runNow()` without awaiting it (API responses never wait for a tick). Promote, reorder,
+  enable/disable and remove pass `{ manual: true }` so a resulting swap is labelled `manual`;
+  import and preference updates run a plain tick; rename does not run the engine. Re-import keeps
+  label/order/enabled and clears `needsReauth`; only a new account logs `account-added`.
+- 2026-11-19 — **Engine** (`application/engine.ts`): a tick loads config + state once, saves once at
+  the end (config only if `needsReauth` changed); any throw becomes an `error` activity + log and the
+  tick still resolves. The next tick is a `setTimeout` of the *current* `pollIntervalSec` after each
+  tick, so a preference change applies after the tick `updatePreferences` triggers. `runNow` is
+  debounced 250 ms (bursts coalesce; `manual` sticks if any caller asked).
+- 2026-11-19 — **Unknown login**: a live login whose `accountUuid` is not ours sets
+  `status().unknownLogin` (its email) and the engine **does not swap** while it is live, so the
+  "/login then Import" flow is never overwritten. Exception: the id equals `lastActiveId` (we wrote
+  it and the account was removed since) → replaced normally, its tokens are not re-stored.
+- 2026-11-19 — **Torn swap** (credentials written, identity not): detected when the live refresh token
+  equals another of our accounts' stored one; that login is not synced back and is treated as
+  "no current account", so the next tick rewrites both files in full. Sync-back runs again right
+  before every swap write.
+- 2026-11-19 — **Polling**: enabled, non-`needsReauth` accounts with tokens, 2 at a time. On error the
+  last snapshot is kept with `error` set (or an all-null snapshot if none); history gets a point only
+  for successful polls. 429 → no polls for that account until `now + retryAfter` (default 600 s),
+  in-memory only. Refresh covers every non-live, non-`needsReauth` account (disabled too, to keep its
+  refresh token alive); other refresh errors are logged and retried next tick. A fresh `/login` of a
+  `needsReauth` account (new refresh token seen at sync-back) clears the flag. A 401 on poll does not
+  force a refresh (the 10-min window handles normal expiry).
