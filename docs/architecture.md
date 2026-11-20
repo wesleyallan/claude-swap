@@ -106,16 +106,18 @@ src/
     system/          clock, logger (console JSON lines), mutex
   server/
     container.ts     composition root (the only place that `new`s adapters)
-    app.ts           Hono app: security middleware, routes, static + index.html templating
-    routes/          accounts, dashboard, preferences, activity — zod-validated inputs
+    app.ts           Hono app: security middleware, all routes (zod-validated inputs),
+                     static + index.html templating
     dto.ts           domain → DTO (never includes tokens)
+    cli.ts           --port / --open parsing
     main.ts          start engine + HTTP server, graceful shutdown (SIGTERM)
   web/
     main.tsx, app.tsx (providers), router.tsx (code-based routes incl. modal routes),
-    features/{shell,dashboard,accounts,settings,activity}, components/ui (shadcn),
+    features/{shell,dashboard,accounts,settings}, components/ui (shadcn),
     components/route-modal.tsx, lib/{api.ts, query.ts}, i18n/{index.ts, messages/*.json}
 tests/e2e/           Playwright specs, fixtures (temp HOME), mock-anthropic server
-deploy/              claude-swap.service (systemd user unit), install script
+deploy/              claude-swap.service (systemd user unit template)
+scripts/             service.ts (install/uninstall the unit), perf-budget.ts
 ```
 
 ## 5. Data files (zod schemas, `version` field + migrations)
@@ -146,6 +148,7 @@ Separating secrets from preferences keeps the user-editable config safe to open,
 
 - Bind `127.0.0.1` only; reject requests whose `Host` is not `localhost|127.0.0.1:<port>`
   (DNS rebinding) and mutating requests whose `Origin` is present and not same-origin (CSRF).
+- Same-origin Content-Security-Policy on every response (no inline or foreign scripts).
 - Secrets never leave the server; DTO mapper is the only path to the client and has a test
   asserting no token fields.
 - No telemetry. Logs never include tokens (logger redacts keys matching /token/i).
@@ -404,3 +407,26 @@ Separating secrets from preferences keeps the user-editable config safe to open,
   flags (`MALLOC_ARENA_MAX=1`, `--max-semi-space-size=1`, `--optimize-for-size`: 79.8–81.6 MB,
   flaky, CPU cost) or a `zod/mini` rewrite; both rejected. `perf:budget` asserts VmRSS < 100 MB and
   also prints RssAnon (~38 MB) / RssFile for information.
+- 2026-11-20 — **CSP** (T13): `default-src 'self'; script-src 'self'; style-src 'self'
+  'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none';
+  base-uri 'none'; form-action 'self'; frame-ancestors 'none'` plus `X-Frame-Options: DENY`. Styles
+  need `'unsafe-inline'` (Base UI/Recharts inline `style`, shadcn chart `<style>`); scripts never
+  do. Vite dev serves its own `index.html`, so HMR is unaffected. An e2e spec asserts no
+  `securitypolicyviolation` on the dashboard, Settings (locale select open) and Add account.
+- 2026-11-20 — **Host/Origin guard reviewed** (T13), kept as is: browsers always send `Origin` on
+  non-GET/HEAD requests (`null` under `no-referrer` or sandboxing, which is rejected), so "no
+  `Origin` = non-browser client" cannot be forged from a page; a rebinding page carries its own
+  `Host` and gets 403 before any route; responses have no CORS headers, so cross-origin reads fail.
+- 2026-11-20 — **429 backoff stays in memory** (T13): a restart costs at most one extra 429 per
+  account before backing off again; persisting it is not worth a state-schema change.
+- 2026-11-20 — **Shutdown** (T13): `Engine.stop()` is async: it cancels the schedule and any pending
+  `runNow` (settling its promise), then waits on the mutex for a tick in flight; `main.ts` exits after
+  that and `server.close`, still force-exiting after 5 s. The delay between ticks is capped at
+  86 400 s in the engine (the file schema has no upper bound, and adding one would move a whole
+  hand-edited config aside as corrupt).
+- 2026-11-20 — **Service reinstall** (T13): `service:install` runs `daemon-reload`, `enable`, then
+  `restart` (not `enable --now`), so a reinstall after an update runs the new build; the unit file
+  is written temp + rename.
+- 2026-11-20 — **Visual checks** (T13): `theme-color` metas follow `prefers-color-scheme` only (a
+  forced theme keeps the system's browser-chrome colour; cosmetic). Transitions list their
+  properties instead of `transition-all`; dialogs use `overscroll-behavior: contain`.
