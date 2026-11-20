@@ -195,3 +195,19 @@ Separating secrets from preferences keeps the user-editable config safe to open,
   the list bounds and throw `AccountNotFoundError` / `InvalidOrderError` (Error subclasses).
 - 2026-11-19 — **Coverage**: `npm test` runs `vitest run --coverage` (v8); `src/domain/**` must stay
   at 100 % statements/branches/functions/lines. Domain test files may import packages (`vitest`).
+- 2026-11-19 — **Persistence** (`infrastructure/fs`, `infrastructure/repositories`): every file is
+  `{ version, ...body }`; a missing `version` means v0 and `migrate()` applies `migrations[v]`
+  step by step. A file that fails JSON parse, migration (incl. a *newer* version than the code)
+  or zod validation is renamed to `*.corrupt-<ISO ts>` and the default is returned (warn logged
+  without file content). Dates are ISO strings on disk via a zod codec. All three files are
+  written `0600`, new dirs `0700`; writes are serialized per file by a promise-queue mutex.
+- 2026-11-19 — `needsReauth` is persisted on the account in `config.json` (default `false`), so a
+  hand-edited or older config without it still loads. Preferences fill missing keys per field.
+- 2026-11-19 — **Ports**: `ConfigRepository`/`StateRepository` are `load()`/`save()` of the whole
+  document; `SecretsRepository` is keyed (`get/set/delete(accountId)`, read-modify-write under the
+  file mutex). `OAuthTokens` requires `accessToken`, `refreshToken`, `expiresAt` (epoch ms) and
+  keeps every other `claudeAiOauth` key.
+- 2026-11-19 — **History ring buffer** (applied in `StateRepository.save`): drop points > 7 days,
+  keep the *last* point per account per 15-min bucket once older than 24 h, hard cap 10 000 points;
+  activity keeps the last 200 entries. Activity types: `swap {from, to, reason}` and
+  `account-added | account-removed | needs-reauth | error {accountId?, message?}`.
