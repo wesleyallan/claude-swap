@@ -25,11 +25,89 @@
   },
   "dashboard": {
     "title": "Contas",
-    "intro": "Os gráficos de uso e a lista ordenada de contas aparecerão aqui."
+    "intro": "O Claude Code sempre usa a primeira conta disponível. Arraste para reordenar; a próxima assume quando um limite é atingido.",
+    "retry": "Tentar de novo",
+    "loadFailed": "Não foi possível carregar o painel",
+    "loadFailedHint": "O servidor do claude-swap não respondeu. Ele pode estar parado ou reiniciando.",
+    "unknownLoginTitle": "A troca automática está pausada",
+    "unknownLogin": "O Claude Code está logado como {email}, que não está na sua lista. Importe a conta para o claude-swap gerenciá-la.",
+    "importAccount": "Importar conta",
+    "engineErrorTitle": "A última verificação do motor falhou",
+    "engineErrorUnknown": "Nenhum detalhe foi registrado. Veja o log do servidor.",
+    "emptyTitle": "Nenhuma conta ainda",
+    "emptyHint": "Faça login no Claude Code e importe a conta aqui. Adicione várias e elas se revezam quando os limites acabam.",
+    "emptyCta": "Adicione sua primeira conta"
   },
   "modal": {
     "close": "Fechar",
     "settingsTitle": "Configurações",
-    "addAccountTitle": "Adicionar conta"
+    "addAccountTitle": "Adicionar conta",
+    "removeAccountTitle": "Remover conta"
+  },
+  "stats": {
+    "label": "Resumo",
+    "active": "Conta ativa",
+    "noActive": "Nenhuma",
+    "unknownActive": "Fora da sua lista",
+    "nextReset": "Próximo reset",
+    "noReset": "Não agendado",
+    "swaps": "Trocas em 24 h",
+    "swapsHint": "{count, plural, =0 {Nenhuma troca} one {# troca automática ou manual} other {# trocas automáticas ou manuais}}",
+    "mode": "Motor",
+    "modeAuto": "Automático",
+    "modeManual": "Manual",
+    "modePaused": "Pausado",
+    "modeAutoHint": "Troca quando um limite é atingido",
+    "modeManualHint": "Fica na primeira conta",
+    "modePausedHint": "Login desconhecido no Claude Code"
+  },
+  "chart": {
+    "title": "Uso ao longo do tempo",
+    "fiveHour": "Janela de 5 horas · últimas 24 h",
+    "sevenDay": "Janela semanal · últimos 7 dias",
+    "empty": "Nenhum uso registrado ainda. Os pontos aparecem após as primeiras verificações.",
+    "summary": "Últimos valores: {values}.",
+    "summaryNone": "Sem dados neste período.",
+    "value": "{name}: {value}"
+  },
+  "accounts": {
+    "listLabel": "Contas por prioridade",
+    "position": "Prioridade {position}",
+    "active": "Ativa",
+    "fiveHour": "5 h",
+    "sevenDay": "7 d",
+    "fiveHourLong": "Uso de 5 horas",
+    "sevenDayLong": "Uso semanal",
+    "noData": "Sem dados",
+    "resets": "reinicia {time}",
+    "useNow": "Usar agora",
+    "inUse": "Em uso",
+    "enabled": "Ativada",
+    "enable": "Ativar {name}",
+    "remove": "Remover {name}",
+    "moveUp": "Mover {name} para cima",
+    "moveDown": "Mover {name} para baixo",
+    "drag": "Reordenar {name}",
+    "pollError": "A última verificação falhou: {message}",
+    "status": {
+      "ok": "OK",
+      "exhausted": "Limite atingido",
+      "needs-reauth": "Requer novo login",
+      "disabled": "Desativada",
+      "unknown": "Desconhecido"
+    },
+    "dnd": {
+      "instructions": "Para reordenar, pressione espaço ou enter na alça, use as setas para cima e para baixo para mover e pressione espaço ou enter de novo para soltar. Pressione esc para cancelar.",
+      "picked": "{name} selecionada.",
+      "over": "{name} agora está na posição {position} de {total}.",
+      "dropped": "{name} solta na posição {position} de {total}.",
+      "canceled": "Reordenação cancelada. {name} voltou para a posição {position}.",
+      "moved": "{name} movida para a posição {position} de {total}."
+    }
+  },
+  "errors": {
+    "saveFailed": "Não foi possível salvar a alteração",
+    "rolledBack": "Sua última alteração foi desfeita. Tente de novo.",
+    "importFailed": "Não foi possível importar o login atual do Claude Code"
   }
 }

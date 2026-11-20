@@ -25,11 +25,89 @@
   },
   "dashboard": {
     "title": "Accounts",
-    "intro": "Usage charts and your ordered account list will appear here."
+    "intro": "Claude Code always uses the first available account. Drag to reorder; the next one takes over when a limit is reached.",
+    "retry": "Try again",
+    "loadFailed": "Couldn't load the dashboard",
+    "loadFailedHint": "The claude-swap server did not answer. It may be stopped or restarting.",
+    "unknownLoginTitle": "Swapping is paused",
+    "unknownLogin": "Claude Code is logged in as {email}, which isn't in your list. Import it so claude-swap can manage it.",
+    "importAccount": "Import account",
+    "engineErrorTitle": "The last engine check failed",
+    "engineErrorUnknown": "No details were recorded. See the server log.",
+    "emptyTitle": "No accounts yet",
+    "emptyHint": "Log in with Claude Code, then import the account here. Add several and they'll take turns as limits run out.",
+    "emptyCta": "Add your first account"
   },
   "modal": {
     "close": "Close",
     "settingsTitle": "Settings",
-    "addAccountTitle": "Add account"
+    "addAccountTitle": "Add account",
+    "removeAccountTitle": "Remove account"
+  },
+  "stats": {
+    "label": "Summary",
+    "active": "Active account",
+    "noActive": "None",
+    "unknownActive": "Not in your list",
+    "nextReset": "Next reset",
+    "noReset": "Not scheduled",
+    "swaps": "Swaps in 24 h",
+    "swapsHint": "{count, plural, =0 {No swaps} one {# automatic or manual swap} other {# automatic or manual swaps}}",
+    "mode": "Engine",
+    "modeAuto": "Automatic",
+    "modeManual": "Manual",
+    "modePaused": "Paused",
+    "modeAutoHint": "Swaps when a limit is reached",
+    "modeManualHint": "Stays on the top account",
+    "modePausedHint": "Unknown login in Claude Code"
+  },
+  "chart": {
+    "title": "Usage over time",
+    "fiveHour": "5-hour window · last 24 h",
+    "sevenDay": "Weekly window · last 7 days",
+    "empty": "No usage recorded yet. Points appear after the first checks.",
+    "summary": "Latest values: {values}.",
+    "summaryNone": "No data in this period.",
+    "value": "{name}: {value}"
+  },
+  "accounts": {
+    "listLabel": "Accounts by priority",
+    "position": "Priority {position}",
+    "active": "Active",
+    "fiveHour": "5 h",
+    "sevenDay": "7 d",
+    "fiveHourLong": "5-hour usage",
+    "sevenDayLong": "Weekly usage",
+    "noData": "No data",
+    "resets": "resets {time}",
+    "useNow": "Use now",
+    "inUse": "In use",
+    "enabled": "Enabled",
+    "enable": "Enable {name}",
+    "remove": "Remove {name}",
+    "moveUp": "Move {name} up",
+    "moveDown": "Move {name} down",
+    "drag": "Reorder {name}",
+    "pollError": "Last check failed: {message}",
+    "status": {
+      "ok": "OK",
+      "exhausted": "Limit reached",
+      "needs-reauth": "Needs re-login",
+      "disabled": "Disabled",
+      "unknown": "Unknown"
+    },
+    "dnd": {
+      "instructions": "To reorder, press space or enter on the handle, use the up and down arrow keys to move, then press space or enter again to drop. Press escape to cancel.",
+      "picked": "Picked up {name}.",
+      "over": "{name} is now at position {position} of {total}.",
+      "dropped": "{name} dropped at position {position} of {total}.",
+      "canceled": "Reordering canceled. {name} is back at position {position}.",
+      "moved": "{name} moved to position {position} of {total}."
+    }
+  },
+  "errors": {
+    "saveFailed": "Couldn't save the change",
+    "rolledBack": "Your last change was undone. Try again.",
+    "importFailed": "Couldn't import the current Claude Code login"
   }
 }

@@ -1,6 +1,13 @@
-import { createRootRoute, createRoute, createRouter, Outlet } from '@tanstack/react-router'
+import {
+  createRootRoute,
+  createRoute,
+  createRouter,
+  Outlet,
+  type RouterHistory,
+} from '@tanstack/react-router'
 import { useTranslations } from 'use-intl'
 import { RouteModal } from './components/route-modal'
+import { Dashboard } from './features/dashboard/dashboard'
 import { Header } from './features/shell/header'
 
 function RootLayout() {
@@ -27,13 +34,9 @@ function RootLayout() {
 
 /** The dashboard stays rendered under every modal route (its children). */
 function DashboardLayout() {
-  const t = useTranslations('dashboard')
   return (
     <>
-      <section className="flex flex-col gap-3">
-        <h1 className="font-heading text-display-md">{t('title')}</h1>
-        <p className="max-w-prose text-muted-foreground">{t('intro')}</p>
-      </section>
+      <Dashboard />
       <Outlet />
     </>
   )
@@ -62,11 +65,20 @@ const addAccountRoute = createRoute({
   },
 })
 
+const removeAccountRoute = createRoute({
+  getParentRoute: () => dashboardRoute,
+  path: 'accounts/$id/remove',
+  component: function RemoveAccountModal() {
+    return <RouteModal title={useTranslations('modal')('removeAccountTitle')} />
+  },
+})
+
 const routeTree = rootRoute.addChildren([
-  dashboardRoute.addChildren([indexRoute, settingsRoute, addAccountRoute]),
+  dashboardRoute.addChildren([indexRoute, settingsRoute, addAccountRoute, removeAccountRoute]),
 ])
 
-export const createAppRouter = () => createRouter({ routeTree })
+export const createAppRouter = (history?: RouterHistory) =>
+  createRouter({ routeTree, ...(history && { history }) })
 
 declare module '@tanstack/react-router' {
   interface Register {

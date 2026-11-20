@@ -47,10 +47,11 @@
   --secondary: light-dark(#faf9f5, #252320);
   --secondary-foreground: var(--foreground);
   --muted: light-dark(#f5f0e8, #1f1e1b);
-  --muted-foreground: light-dark(#6c6a64, #a09d96);
+  /* Light values deepened from DESIGN.md (#6c6a64, #c64545) to keep AA 4.5:1 on cards. */
+  --muted-foreground: light-dark(#65635d, #a09d96);
   --accent: light-dark(#e8e0d2, #2e2b27);
   --accent-foreground: var(--foreground);
-  --destructive: light-dark(#c64545, #e5736b);
+  --destructive: light-dark(#b33b3b, #e5736b);
   --success: #5db872;
   --warning: #d4a017;
   --border: light-dark(#e6dfd8, #34312c);

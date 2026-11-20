@@ -1,6 +1,7 @@
 import { type QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { type ReactNode, useEffect } from 'react'
-import { IntlProvider } from 'use-intl'
+import { IntlProvider, useTranslations } from 'use-intl'
+import { Toaster } from './components/ui/toast'
 import { messages } from './i18n'
 import { usePreferences } from './lib/query'
 
@@ -17,9 +18,13 @@ function PreferencesScope({ children }: { children: ReactNode }) {
   }, [theme, locale])
   return (
     <IntlProvider locale={locale} messages={messages[locale]} timeZone={timeZone}>
-      {children}
+      <Toasts>{children}</Toasts>
     </IntlProvider>
   )
+}
+
+function Toasts({ children }: { children: ReactNode }) {
+  return <Toaster closeLabel={useTranslations('modal')('close')}>{children}</Toaster>
 }
 
 export function AppProviders({ client, children }: { client: QueryClient; children: ReactNode }) {

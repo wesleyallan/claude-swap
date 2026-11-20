@@ -1,5 +1,18 @@
 import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { fetchDashboard, type Locale, type Preferences, patchPreferences, type Theme } from './api'
+import { useTranslations } from 'use-intl'
+import { toast } from '@/web/components/ui/toast'
+import {
+  type Dashboard,
+  fetchDashboard,
+  importCurrentLogin,
+  type Locale,
+  type Preferences,
+  patchPreferences,
+  promoteAccount,
+  putOrder,
+  setAccountEnabled,
+  type Theme,
+} from './api'
 
 export const createQueryClient = () =>
   new QueryClient({
@@ -10,8 +23,6 @@ export const createQueryClient = () =>
 const dashboardKey = ['dashboard'] as const
 
 export const useDashboard = () => useQuery({ queryKey: dashboardKey, queryFn: fetchDashboard })
-
-type Dashboard = Awaited<ReturnType<typeof fetchDashboard>>
 
 /** Theme and locale as the server rendered them into <html>, used until the dashboard loads. */
 function fromDocument(): { theme: Theme; locale: Locale } {
@@ -30,23 +41,65 @@ export function usePreferences() {
   return data?.preferences ?? fromDocument()
 }
 
-/** PATCH /preferences with an optimistic cache update, rolled back on error. */
-export function useUpdatePreferences() {
+/**
+ * A mutation that applies `optimistic` to the cached dashboard at once, rolls it back and shows
+ * an error toast when the request fails, and refetches once it settles either way.
+ */
+function useDashboardMutation<V>(
+  mutationFn: (vars: V) => Promise<unknown>,
+  optimistic: (d: Dashboard, vars: V) => Dashboard,
+) {
   const client = useQueryClient()
+  const t = useTranslations('errors')
   return useMutation({
-    mutationFn: patchPreferences,
-    onMutate: async (patch) => {
+    mutationFn,
+    onMutate: async (vars: V) => {
       await client.cancelQueries({ queryKey: dashboardKey })
       const previous = client.getQueryData<Dashboard>(dashboardKey)
-      if (previous) {
-        client.setQueryData<Dashboard>(dashboardKey, {
-          ...previous,
-          preferences: { ...previous.preferences, ...patch } as Preferences,
-        })
-      }
+      if (previous) client.setQueryData<Dashboard>(dashboardKey, optimistic(previous, vars))
       return { previous }
     },
-    onError: (_err, _patch, result) => client.setQueryData(dashboardKey, result?.previous),
+    onError: (_err, _vars, result) => {
+      client.setQueryData(dashboardKey, result?.previous)
+      toast.add({ title: t('saveFailed'), description: t('rolledBack'), type: 'error' })
+    },
+    onSettled: () => client.invalidateQueries({ queryKey: dashboardKey }),
+  })
+}
+
+/** Accounts in the order of `ids` (ids missing from the cache are ignored). */
+const ordered = (d: Dashboard, ids: readonly string[]): Dashboard => ({
+  ...d,
+  accounts: ids.flatMap((id) => d.accounts.find((a) => a.id === id) ?? []),
+})
+
+export const useUpdatePreferences = () =>
+  useDashboardMutation(patchPreferences, (d, patch) => ({
+    ...d,
+    preferences: { ...d.preferences, ...patch } as Preferences,
+  }))
+
+export const useReorderAccounts = () => useDashboardMutation(putOrder, ordered)
+
+/** "Use now": moves the account to the top; the engine then makes it active. */
+export const usePromoteAccount = () =>
+  useDashboardMutation(promoteAccount, (d, id) =>
+    ordered(d, [id, ...d.accounts.map((a) => a.id).filter((x) => x !== id)]),
+  )
+
+export const useSetAccountEnabled = () =>
+  useDashboardMutation(setAccountEnabled, (d, { id, enabled }) => ({
+    ...d,
+    accounts: d.accounts.map((a) => (a.id === id ? { ...a, enabled } : a)),
+  }))
+
+/** Imports the login Claude Code is using right now (the "unknown login" banner). */
+export function useImportCurrentLogin() {
+  const client = useQueryClient()
+  const t = useTranslations('errors')
+  return useMutation({
+    mutationFn: importCurrentLogin,
+    onError: () => toast.add({ title: t('importFailed'), type: 'error' }),
     onSettled: () => client.invalidateQueries({ queryKey: dashboardKey }),
   })
 }
