@@ -1,0 +1,38 @@
+{
+  "numStartups": 42,
+  "installMethod": "native",
+  "autoUpdates": true,
+  "theme": "dark",
+  "verbose": false,
+  "editorMode": "normal",
+  "tipsHistory": { "fake-tip": 3 },
+  "userID": "0000000000000000000000000000000000000000000000000000000000000000",
+  "firstStartTime": "2026-01-01T00:00:00.000Z",
+  "hasCompletedOnboarding": true,
+  "lastOnboardingVersion": "2.1.329",
+  "lastReleaseNotesSeen": "2.1.329",
+  "subscriptionNoticeCount": 0,
+  "hasAvailableSubscription": false,
+  "cachedStatsigGates": { "fake_gate": true },
+  "mcpServers": { "fake-server": { "type": "http", "url": "https://mcp.example.test/mcp" } },
+  "projects": {
+    "/home/fake/project": {
+      "allowedTools": [],
+      "history": [],
+      "mcpServers": {},
+      "hasTrustDialogAccepted": true,
+      "lastCost": 0.12
+    }
+  },
+  "oauthAccount": {
+    "accountUuid": "00000000-0000-4000-8000-000000000001",
+    "emailAddress": "original@example.test",
+    "organizationUuid": "00000000-0000-4000-8000-0000000000aa",
+    "displayName": "Original Fake",
+    "organizationName": "Fake Org",
+    "organizationRole": "admin",
+    "workspaceRole": null,
+    "hasExtraUsageEnabled": false,
+    "billingType": "stripe_subscription"
+  }
+}

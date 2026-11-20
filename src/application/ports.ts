@@ -83,3 +83,22 @@ export interface StateRepository {
   load(): Promise<AppState>
   save(state: AppState): Promise<void>
 }
+
+/** Claude Code's `oauthAccount` (identity in `.claude.json`); keys we do not model are kept. */
+export interface OAuthAccount {
+  readonly accountUuid: string
+  readonly emailAddress: string
+  readonly [key: string]: unknown
+}
+
+export interface ClaudeCodeLogin {
+  readonly oauth: OAuthTokens
+  readonly account: OAuthAccount
+}
+
+/** The live Claude Code login. Writes replace only our keys and keep every other one. */
+export interface ClaudeCodeSession {
+  /** `null` when Claude Code is not logged in (files or keys missing). */
+  readCurrentLogin(): Promise<ClaudeCodeLogin | null>
+  writeLogin(oauth: OAuthTokens, account: OAuthAccount): Promise<void>
+}
