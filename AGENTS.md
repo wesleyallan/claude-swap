@@ -46,7 +46,7 @@ for Hono, Vite, TanStack Router/Query, use-intl, Tailwind v4, shadcn, dnd-kit, P
 | Lint / format check | `npm run lint` (fix: `npm run format`) |
 | Type check | `npm run typecheck` |
 | Unit + integration tests (+ coverage, 100 % on `src/domain`) | `npm test` (watch: `npm run test:watch`) |
-| E2E tests | `npm run test:e2e` |
+| E2E tests (builds first) | `npm run test:e2e` |
 | Everything CI runs | `npm run check` |
 
 `npm run check` must pass before every commit. (Commands exist from task T01 on.)

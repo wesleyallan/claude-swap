@@ -362,3 +362,16 @@ Separating secrets from preferences keeps the user-editable config safe to open,
 - 2026-11-19 — **Remove** (T10): plain `Dialog` (not `AlertDialog`) so it reuses `RouteModal`;
   optimistic removal, warning when it is the active account (engine swaps to the next one). An
   unknown id shows "not in your list" with Cancel only.
+- 2026-11-19 — **E2E harness** (T11): no shared Playwright `webServer`. A test-scoped fixture
+  (`tests/e2e/fixtures.ts`) spawns the built `dist/server/main.js` per test on a free port with its
+  own temp `HOME`, `CLAUDE_SWAP_HOME` and `CLAUDE_CONFIG_DIR`, seeded with foreign keys in both
+  Claude Code files (preservation is asserted), and asserts exit code 0 after SIGTERM (covers
+  `main.ts` startup/shutdown). Full isolation makes `fullyParallel` safe. The mock Anthropic API
+  (`tests/e2e/mock-anthropic.ts`) is one per worker; tokens are unique per test, `POST /__control`
+  sets windows or forces 401/429/`invalid_grant` per token, refresh does not rotate. Specs drive
+  ticks with `POST /api/engine/run` instead of a short poll interval (deterministic, no sleeps);
+  UI assertions use a 15 s expect timeout to cover the 10 s dashboard poll. `npm run test:e2e`
+  builds first. axe runs WCAG 2.0/2.1 A/AA + 2.2 AA on the dashboard and the three modals in
+  light and dark.
+- 2026-11-19 — **Dark destructive token** (T11): axe found the destructive button text at 3.85:1 on
+  its dark tint. Dark `--destructive` `#e5736b` → `#f0948c`, button tint 20 → 15 % (hover 20 %).
