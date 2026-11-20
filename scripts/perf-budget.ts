@@ -77,10 +77,16 @@ async function checkRss(): Promise<boolean> {
       stdio: ['ignore', 'pipe', 'inherit'],
     },
   )
+  const exited = new Promise<number | null>((r) => child.once('exit', r))
   try {
     await new Promise<void>((ok, fail) => {
-      child.stdout.on('data', (c: Buffer) => c.toString().includes('"msg":"listening"') && ok())
-      child.once('exit', (code) => fail(new Error(`server exited (${code}) before listening`)))
+      let out = '' // the log line may arrive split across chunks
+      child.stdout.on('data', (c: Buffer) => {
+        out += c
+        if (out.includes('"msg":"listening"')) ok()
+      })
+      void exited.then((code) => fail(new Error(`server exited (${code}) before listening`)))
+      setTimeout(() => fail(new Error('server did not start within 10 s')), 10_000).unref()
     })
     const base = `http://127.0.0.1:${port}`
     for (const name of ['perf-a', 'perf-b']) {
@@ -120,6 +126,7 @@ async function checkRss(): Promise<boolean> {
     return rss > 0 && rss < RSS_MAX
   } finally {
     child.kill('SIGTERM')
+    await exited // its last state.json write must land before the temp dir goes
     await mock.close()
     await rm(dir, { recursive: true, force: true })
   }
