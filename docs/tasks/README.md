@@ -5,7 +5,7 @@ Read `AGENTS.md` and `docs/architecture.md` first; the architecture doc is the s
 
 | # | Task | Status |
 | --- | --- | --- |
-| T01 | [Scaffold & tooling](T01-scaffold.md) | [ ] |
+| T01 | [Scaffold & tooling](T01-scaffold.md) | [x] |
 | T02 | [Domain model & rotation policy](T02-domain.md) | [ ] |
 | T03 | [File persistence & repositories](T03-persistence.md) | [ ] |
 | T04 | [Claude Code session adapter](T04-claude-code-adapter.md) | [ ] |

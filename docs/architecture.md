@@ -171,3 +171,12 @@ Separating secrets from preferences keeps the user-editable config safe to open,
 - 2026-11-19 — **Secrets in a separate 0600 file**, preferences/accounts in `config.json`.
 - 2026-11-19 — Linux file-based credentials only; macOS Keychain is a future `ClaudeCodeSession` adapter.
 - 2026-11-19 — `graphify-out/` gitignored; refreshed by `graphify update .` and a post-commit hook.
+- 2026-11-19 — **Biome 2** for lint + format + import sorting (one fast tool, no ESLint/Prettier).
+  Markdown is excluded from Biome so docs keep their hand formatting.
+- 2026-11-19 — **Layer boundaries are a Vitest test** (`src/architecture.test.ts`, regex import scan),
+  not a lint rule: `domain` imports only `domain` (no packages, no `node:*` builtins);
+  `application` imports only `domain`/`application` and packages; `web` imports `server` only via
+  `import type` and no other layer.
+- 2026-11-19 — **One `tsconfig.json`** for server, web and configs (TypeScript 7, `moduleResolution:
+  bundler`, `paths` without `baseUrl`, `noEmit`). tsc only type-checks; Vite builds the SPA, tsup
+  (esbuild) bundles the server with npm deps left external (`npm ci --omit=dev` needed at runtime).

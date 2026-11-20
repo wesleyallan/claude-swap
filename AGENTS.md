@@ -29,7 +29,8 @@ Visual language: [`DESIGN.md`](DESIGN.md).
   design tokens from `DESIGN.md`, light/dark themes
 - **use-intl** for i18n — locales: `en` (default/source), `es`, `pt-BR`
 - zod for every external boundary (config files, Claude Code files, HTTP responses)
-- Vitest + Testing Library (unit/integration), Playwright (e2e)
+- Biome (lint + format + import sorting); TypeScript 7 (`tsc --noEmit` only)
+- Vitest (projects `node` + `jsdom`) + Testing Library (unit/integration), Playwright (e2e, chromium)
 - npm (no pnpm/yarn). Node 24.
 
 Before using any library API, fetch current docs with the **context7** MCP — do not trust memory
@@ -42,7 +43,7 @@ for Hono, Vite, TanStack Router/Query, use-intl, Tailwind v4, shadcn, dnd-kit, P
 | Install | `npm ci` |
 | Dev (API + Vite with HMR) | `npm run dev` |
 | Production | `npm run build && npm run start` |
-| Lint / format check | `npm run lint` |
+| Lint / format check | `npm run lint` (fix: `npm run format`) |
 | Type check | `npm run typecheck` |
 | Unit + integration tests | `npm test` (watch: `npm run test:watch`) |
 | E2E tests | `npm run test:e2e` |
@@ -73,6 +74,7 @@ Rules:
   functions with exhaustive unit tests. Never put them in components or route handlers.
 - Time is injected (`Clock` port). Never call `Date.now()` in domain/application.
 - All file writes are atomic (write temp → fsync → rename) with mode `0600` for secrets.
+- These rules are enforced by `src/architecture.test.ts` (part of `npm test`).
 - `web/` imports from `server/` **types only** (`import type`, for the RPC client). It never
   imports domain/infrastructure runtime code.
 - Keep the server lean: no heavy deps in the daemon; everything UI-only stays in `web/`.
