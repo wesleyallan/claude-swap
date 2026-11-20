@@ -42,11 +42,13 @@ function layerOf(abs: string): Layer | undefined {
 function violations(file: string, source: string): string[] {
   const from = layerOf(file)
   if (!from) return []
+  const isTest = /\.test\.tsx?$/.test(file)
   const out: string[] = []
   for (const { specifier, typeOnly } of parseImports(source)) {
     const to = targetLayer(file, specifier)
     const bad =
-      (from === 'domain' && to !== 'domain') ||
+      // domain tests may import packages (vitest), never other layers
+      (from === 'domain' && to !== 'domain' && !(isTest && to === null)) ||
       (from === 'application' && to !== null && to !== 'domain' && to !== 'application') ||
       (from === 'web' && to !== null && to !== 'web' && !(to === 'server' && typeOnly))
     if (bad) out.push(`${relative(SRC, file)} -> ${specifier}`)
@@ -70,6 +72,11 @@ describe('layer boundaries', () => {
     expect(
       violations(at('domain/a.ts'), "import type { X } from '@/application/ports'"),
     ).toHaveLength(1)
+  })
+
+  it('domain tests may import packages but still no other layer', () => {
+    expect(violations(at('domain/a.test.ts'), "import { it } from 'vitest'")).toEqual([])
+    expect(violations(at('domain/a.test.ts'), "import { x } from '@/server/app'")).toHaveLength(1)
   })
 
   it('application never imports infrastructure, server or web', () => {
