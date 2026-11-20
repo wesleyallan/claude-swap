@@ -343,3 +343,22 @@ Separating secrets from preferences keeps the user-editable config safe to open,
   for a localhost app, revisit in T12's performance budget.
 - 2026-11-19 — **AA tokens** (T09): light `--muted-foreground` `#65635d` (DESIGN.md `#6c6a64` gave
   4.48:1 on cards) and light `--destructive` `#b33b3b` (`#c64545` gave 4.0:1 on cards).
+- 2026-11-19 — **Modals** (T10): `/settings`, `/accounts/new` and `/accounts/$id/remove` are lazy
+  route components (`lazyRouteComponent`, own chunks; main chunk ~720 → ~520 kB). `RouteModal`
+  relies on Base UI's default `finalFocus` (the element focused before opening, i.e. the link), which
+  also works when navigation unmounts the dialog. After a removal the trigger row is gone, so focus
+  goes to `#main`. Toasts are `role="dialog"` too: tests find the modal by `data-slot`.
+- 2026-11-19 — **Add account** (T10): `GET /api/accounts/current` → `{ login: { id, email, known } |
+  null }` (reads the Claude Code files, never tokens), polled every 3 s while the modal is open so a
+  fresh `/login` shows up. `POST /accounts/import` takes an optional JSON `{ label }` (≤ 100 chars;
+  blank or no body = default label); a non-blank label also renames a re-imported account. The
+  success toast says "added" or "login updated" from `known`. The unknown-login banner's
+  **Import account** now opens this modal instead of importing directly (one import path, with
+  the steps, the `/logout` warning and the label).
+- 2026-11-19 — **Settings form** (T10): applies all fields on **Save** (no live preview); zod in the
+  web chunk (`features/settings/settings-form.ts`), number fields kept as strings and coerced.
+  UI bounds are narrower than the API: thresholds 50–100 (integers), poll 60–3600 s. A stored
+  value outside them (the API still accepts 10–86400 s) shows as an inline error on Save.
+- 2026-11-19 — **Remove** (T10): plain `Dialog` (not `AlertDialog`) so it reuses `RouteModal`;
+  optimistic removal, warning when it is the active account (engine swaps to the next one). An
+  unknown id shows "not in your list" with Cancel only.
