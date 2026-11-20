@@ -39,3 +39,26 @@ test('never sends tokens to the browser', async ({ request, app }) => {
   expect(body).not.toContain(a.accessToken)
   expect(body).not.toContain(a.refreshToken)
 })
+
+test('the CSP blocks nothing the app itself uses', async ({ page, app, request }) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as { cspViolations: string[] }
+    w.cspViolations = []
+    document.addEventListener('securitypolicyviolation', (e) =>
+      w.cspViolations.push(`${e.violatedDirective} ${e.blockedURI}`),
+    )
+  })
+  await importLogin(app, request, fakeAccount('Alpha'))
+  const res = await page.goto('/')
+  expect(res?.headers()['content-security-policy']).toContain("script-src 'self'")
+  await expect(page.getByRole('heading', { name: 'Alpha' })).toBeVisible()
+  await page.getByRole('button', { name: 'Settings' }).click()
+  await page.getByRole('dialog').getByRole('combobox', { name: 'Language' }).click()
+  await expect(page.getByRole('option').first()).toBeVisible()
+  await page.keyboard.press('Escape')
+  await page.goto('/accounts/new')
+  await expect(page.getByRole('dialog')).toBeVisible()
+  expect(
+    await page.evaluate(() => (window as unknown as { cspViolations: string[] }).cspViolations),
+  ).toEqual([])
+})

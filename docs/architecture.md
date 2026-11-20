@@ -286,7 +286,7 @@ Separating secrets from preferences keeps the user-editable config safe to open,
   `CLAUDE_SWAP_WEB_DIR`). `/assets/*` → `Cache-Control: public, max-age=31536000, immutable`, a miss
   is 404 (never the SPA); other files `no-cache`; every other GET returns `index.html` (`no-cache`)
   with `<html lang="<locale>">` plus `class="dark"`/`class="light"` for an explicit theme (none for
-  `system`; changed in T08). No build → 503. `secureHeaders()` defaults only; no CSP yet (T08/T13 may add one).
+  `system`; changed in T08). No build → 503. `secureHeaders()` + a CSP (T13, see below).
 - 2026-11-19 — **Dev proxy**: Vite proxies `/api` with `changeOrigin` and rewrites a same-origin
   (`http://<vite host>`) `Origin` to the API origin, so the guard needs no dev exception.
 - 2026-11-19 — **Runtime** (`server/main.ts`): binds `127.0.0.1:${PORT:-4747}`, logs `listening`

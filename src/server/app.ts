@@ -133,7 +133,26 @@ export function createApp(c: Container) {
     })
 
   const app = new Hono()
-  app.use(guard(c.port), secureHeaders())
+  app.use(
+    guard(c.port),
+    secureHeaders({
+      // Everything is same-origin; Base UI/Recharts set inline `style` attributes (and shadcn's
+      // chart a <style> element), so styles need 'unsafe-inline'. Scripts never do.
+      contentSecurityPolicy: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", 'data:'],
+        fontSrc: ["'self'"],
+        connectSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        baseUri: ["'none'"],
+        formAction: ["'self'"],
+        frameAncestors: ["'none'"],
+      },
+      xFrameOptions: 'DENY',
+    }),
+  )
   app.onError((err, ctx) => {
     if (err instanceof AccountNotFoundError) return ctx.json({ error: 'account-not-found' }, 404)
     if (err instanceof InvalidOrderError) return ctx.json({ error: 'invalid-order' }, 400)

@@ -123,7 +123,25 @@ describe('security middleware', () => {
   it('sets secure headers', async () => {
     const res = await req('/api/health')
     expect(res.headers.get('x-content-type-options')).toBe('nosniff')
-    expect(res.headers.get('x-frame-options')).toBe('SAMEORIGIN')
+    expect(res.headers.get('x-frame-options')).toBe('DENY')
+  })
+
+  it('sends a same-origin CSP: no inline or foreign scripts, inline styles allowed', async () => {
+    const csp = (await req('/')).headers.get('content-security-policy') ?? ''
+    const directives = Object.fromEntries(
+      csp.split(';').map((d) => {
+        const [name = '', ...values] = d.trim().split(/\s+/)
+        return [name, values.join(' ')]
+      }),
+    )
+    expect(directives).toMatchObject({
+      'default-src': "'self'",
+      'script-src': "'self'",
+      'style-src': "'self' 'unsafe-inline'",
+      'object-src': "'none'",
+      'base-uri': "'none'",
+      'frame-ancestors': "'none'",
+    })
   })
 })
 
