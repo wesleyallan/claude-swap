@@ -2,7 +2,7 @@ import { mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/promise
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { z } from 'zod'
+import * as z from 'zod'
 import { JsonFile, type JsonFileOptions } from './json-file'
 
 const date = z.codec(z.iso.datetime(), z.date(), {

@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import * as z from 'zod'
 import type { Preferences } from '@/web/lib/api'
 
 /** What the Settings form edits: number fields stay strings until they are parsed. */

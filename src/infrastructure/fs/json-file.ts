@@ -1,5 +1,5 @@
 import { readFile, rename } from 'node:fs/promises'
-import type { z } from 'zod'
+import type * as z from 'zod'
 import type { Clock, Logger } from '@/application/ports'
 import { PromiseMutex } from '../system/mutex'
 import { atomicWrite } from './atomic-write'

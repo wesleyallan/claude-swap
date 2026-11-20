@@ -1,7 +1,7 @@
 import { mkdir, readdir, readFile, realpath, stat } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { basename, join } from 'node:path'
-import type { z } from 'zod'
+import type * as z from 'zod'
 import type {
   ClaudeCodeLogin,
   ClaudeCodeSession,

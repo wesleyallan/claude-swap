@@ -6,7 +6,7 @@ import { zValidator } from '@hono/zod-validator'
 import { type Context, Hono, type MiddlewareHandler } from 'hono'
 import { HTTPException } from 'hono/http-exception'
 import { secureHeaders } from 'hono/secure-headers'
-import { z } from 'zod'
+import * as z from 'zod'
 import {
   getCurrentLogin,
   getDashboard,

@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import * as z from 'zod'
 import { DEFAULT_PREFERENCES } from '@/domain/preferences'
 
 /** Every data file is at this schema version; bump it together with a migration. */
