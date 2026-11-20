@@ -211,3 +211,13 @@ Separating secrets from preferences keeps the user-editable config safe to open,
   keep the *last* point per account per 15-min bucket once older than 24 h, hard cap 10 000 points;
   activity keeps the last 200 entries. Activity types: `swap {from, to, reason}` and
   `account-added | account-removed | needs-reauth | error {accountId?, message?}`.
+- 2026-11-19 — **Claude Code adapter** (`infrastructure/claude-code`, `FileClaudeCodeSession`):
+  a missing file **or** a missing `claudeAiOauth`/`oauthAccount` key reads as "not logged in"
+  (`null`); invalid JSON, a non-object or a key failing its schema throws `ClaudeCodeFileError`
+  (path + field names only, never content). `writeLogin` reads and validates both files first, so
+  a malformed file is never overwritten; then backs up, writes `.credentials.json`, then
+  `.claude.json`. Each file keeps its current mode (0600 when created) and a symlinked file is
+  written through (`realpath`), not replaced. "First write ever" = `backups/` is missing or empty;
+  the backup is `backups/<ISO ts with - for :.>/{.credentials.json,.claude.json}` (0600, only the
+  files that exist). Writes are serialized by the adapter's own mutex. `claudeAiOauth` reuses the
+  secrets `oauthTokensSchema`; `CLAUDE_CONFIG_DIR=""` counts as unset.
