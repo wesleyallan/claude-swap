@@ -358,7 +358,8 @@ Separating secrets from preferences keeps the user-editable config safe to open,
 - 2026-11-19 — **Settings form** (T10): applies all fields on **Save** (no live preview); zod in the
   web chunk (`features/settings/settings-form.ts`), number fields kept as strings and coerced.
   UI bounds are narrower than the API: thresholds 50–100 (integers), poll 60–3600 s. A stored
-  value outside them (the API still accepts 10–86400 s) shows as an inline error on Save.
+  value outside them (the API still accepts 0–100 % and 10–86400 s) is accepted while untouched
+  (T13: it used to block Save of every other field); editing it applies the UI bounds.
 - 2026-11-19 — **Remove** (T10): plain `Dialog` (not `AlertDialog`) so it reuses `RouteModal`;
   optimistic removal, warning when it is the active account (engine swaps to the next one). An
   unknown id shows "not in your list" with Cancel only.

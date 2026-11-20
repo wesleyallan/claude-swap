@@ -59,7 +59,7 @@ function SettingsFormView({ preferences }: { preferences: Preferences }) {
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
-    const result = parseSettings(form)
+    const result = parseSettings(preferences, form)
     if (!result.ok) {
       setErrors(result.errors)
       // Move focus to the first invalid field so keyboard and screen reader users land on it.

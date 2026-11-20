@@ -15,13 +15,15 @@ export type SettingsErrors = Partial<Record<'fiveHour' | 'sevenDay' | 'pollInter
 
 // Narrower than the API (any 0–100 %, 10–86 400 s): below 50 % or 60 s is never what anyone wants.
 const threshold = z.coerce.number().int().min(50).max(100)
-const schema = z.object({
-  theme: z.enum(['light', 'dark', 'system']),
-  locale: z.enum(['en', 'es', 'pt-BR']),
-  autoRotate: z.boolean(),
+const bounded = {
   fiveHour: threshold,
   sevenDay: threshold,
   pollIntervalSec: z.coerce.number().int().min(60).max(3600),
+}
+const base = z.object({
+  theme: z.enum(['light', 'dark', 'system']),
+  locale: z.enum(['en', 'es', 'pt-BR']),
+  autoRotate: z.boolean(),
 })
 
 export const toForm = (p: Preferences): SettingsForm => ({
@@ -33,11 +35,25 @@ export const toForm = (p: Preferences): SettingsForm => ({
   pollIntervalSec: String(p.pollIntervalSec),
 })
 
-/** Validates the form; on failure flags each bad field (the UI owns the translated messages). */
+/**
+ * Validates the form against the `saved` preferences; on failure flags each bad field (the UI owns
+ * the translated messages). An untouched number keeps its stored value even outside the UI bounds,
+ * so a value set through the API never blocks saving the other fields.
+ */
 export function parseSettings(
+  saved: Preferences,
   form: SettingsForm,
 ): { ok: true; preferences: Preferences } | { ok: false; errors: SettingsErrors } {
-  const r = schema.safeParse(form)
+  const before = toForm(saved)
+  const field = (k: keyof SettingsErrors) =>
+    form[k].trim() === before[k] ? z.coerce.number() : bounded[k]
+  const r = base
+    .extend({
+      fiveHour: field('fiveHour'),
+      sevenDay: field('sevenDay'),
+      pollIntervalSec: field('pollIntervalSec'),
+    })
+    .safeParse(form)
   if (!r.success) {
     const errors: SettingsErrors = {}
     for (const issue of r.error.issues) errors[issue.path[0] as keyof SettingsErrors] = true
