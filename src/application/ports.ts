@@ -102,3 +102,17 @@ export interface ClaudeCodeSession {
   readCurrentLogin(): Promise<ClaudeCodeLogin | null>
   writeLogin(oauth: OAuthTokens, account: OAuthAccount): Promise<void>
 }
+
+/** Anthropic OAuth usage endpoint. Rejects with an `AnthropicApiError`. */
+export interface UsageApi {
+  fetchUsage(accessToken: string): Promise<UsageSnapshot>
+}
+
+/**
+ * Anthropic OAuth token endpoint. Takes the whole previous `claudeAiOauth` value (its refresh
+ * token is used; keys the response lacks, such as `subscriptionType`, are kept). The refresh token
+ * rotates: persist the result before using it. Rejects with an `AnthropicApiError`.
+ */
+export interface TokenRefresher {
+  refresh(previous: OAuthTokens): Promise<OAuthTokens>
+}
