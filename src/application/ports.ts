@@ -1,0 +1,85 @@
+import type { Account, AccountId } from '@/domain/account'
+import type { Preferences } from '@/domain/preferences'
+import type { SelectionReason } from '@/domain/rotation-policy'
+import type { UsageSnapshot } from '@/domain/usage'
+
+export interface Clock {
+  now(): Date
+}
+
+export type LogFields = Readonly<Record<string, unknown>>
+
+export interface Logger {
+  info(message: string, fields?: LogFields): void
+  warn(message: string, fields?: LogFields): void
+  error(message: string, fields?: LogFields): void
+}
+
+/** Serializes async critical sections (engine ticks vs. API mutations, file writes). */
+export interface Mutex {
+  run<T>(fn: () => Promise<T>): Promise<T>
+}
+
+/** `config.json`: array order of `accounts` is the priority. */
+export interface AppConfig {
+  readonly preferences: Preferences
+  readonly accounts: readonly Account[]
+}
+
+export interface ConfigRepository {
+  load(): Promise<AppConfig>
+  save(config: AppConfig): Promise<void>
+}
+
+/** Claude Code's `claudeAiOauth` object; keys we do not model are kept as-is. */
+export interface OAuthTokens {
+  readonly accessToken: string
+  readonly refreshToken: string
+  /** Epoch milliseconds. */
+  readonly expiresAt: number
+  readonly [key: string]: unknown
+}
+
+export interface SecretsRepository {
+  get(id: AccountId): Promise<OAuthTokens | null>
+  set(id: AccountId, tokens: OAuthTokens): Promise<void>
+  delete(id: AccountId): Promise<void>
+}
+
+export interface HistoryPoint {
+  readonly t: Date
+  readonly accountId: AccountId
+  /** Utilization 0–100, null when the window is unknown. */
+  readonly fiveHour: number | null
+  readonly sevenDay: number | null
+}
+
+export type ActivityEntry =
+  | {
+      readonly t: Date
+      readonly type: 'swap'
+      readonly from: AccountId | null
+      readonly to: AccountId
+      readonly reason: SelectionReason
+    }
+  | {
+      readonly t: Date
+      readonly type: 'account-added' | 'account-removed' | 'needs-reauth' | 'error'
+      readonly accountId?: AccountId
+      readonly message?: string
+    }
+
+export interface AppState {
+  readonly usage: Readonly<Record<AccountId, UsageSnapshot>>
+  /** Oldest first. */
+  readonly history: readonly HistoryPoint[]
+  /** Oldest first. */
+  readonly activity: readonly ActivityEntry[]
+  readonly lastActiveId: AccountId | null
+}
+
+/** `save` compacts history and activity (caps + downsampling) before writing. */
+export interface StateRepository {
+  load(): Promise<AppState>
+  save(state: AppState): Promise<void>
+}
