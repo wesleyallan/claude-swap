@@ -27,6 +27,12 @@ export const preferencesSchema = z.object({
   pollIntervalSec: z.number().int().min(10).default(P.pollIntervalSec),
 })
 
+/** `oauthAccount` (Claude Code identity): unknown keys (organizationUuid, displayName, …) are preserved. */
+export const oauthAccountSchema = z.looseObject({
+  accountUuid: z.string().min(1),
+  emailAddress: z.string(),
+})
+
 export const accountSchema = z.object({
   id: z.string().min(1),
   label: z.string(),
@@ -36,6 +42,7 @@ export const accountSchema = z.object({
   enabled: z.boolean(),
   needsReauth: z.boolean().default(false),
   addedAt: isoDate,
+  oauthAccount: oauthAccountSchema,
 })
 
 export const configSchema = z.object({

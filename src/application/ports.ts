@@ -20,10 +20,15 @@ export interface Mutex {
   run<T>(fn: () => Promise<T>): Promise<T>
 }
 
+/** A registered account plus the Claude Code identity snapshot written back on swap. */
+export interface StoredAccount extends Account {
+  readonly oauthAccount: OAuthAccount
+}
+
 /** `config.json`: array order of `accounts` is the priority. */
 export interface AppConfig {
   readonly preferences: Preferences
-  readonly accounts: readonly Account[]
+  readonly accounts: readonly StoredAccount[]
 }
 
 export interface ConfigRepository {

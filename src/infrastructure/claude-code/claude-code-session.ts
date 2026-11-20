@@ -1,7 +1,7 @@
 import { mkdir, readdir, readFile, realpath, stat } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { basename, join } from 'node:path'
-import { z } from 'zod'
+import type { z } from 'zod'
 import type {
   ClaudeCodeLogin,
   ClaudeCodeSession,
@@ -10,7 +10,7 @@ import type {
   OAuthTokens,
 } from '@/application/ports'
 import { atomicWrite } from '../fs/atomic-write'
-import { oauthTokensSchema } from '../repositories/schemas'
+import { oauthAccountSchema, oauthTokensSchema } from '../repositories/schemas'
 import { PromiseMutex } from '../system/mutex'
 
 type Env = Readonly<Record<string, string | undefined>>
@@ -25,12 +25,6 @@ export function claudeCodePaths(env: Env = process.env, home: string = homedir()
         claudeJson: join(home, '.claude.json'),
       }
 }
-
-/** `oauthAccount`: unknown keys (organizationUuid, displayName, …) are preserved. */
-export const oauthAccountSchema = z.looseObject({
-  accountUuid: z.string().min(1),
-  emailAddress: z.string(),
-})
 
 /** A Claude Code file exists but cannot be used. Never carries file content (it may hold tokens). */
 export class ClaudeCodeFileError extends Error {

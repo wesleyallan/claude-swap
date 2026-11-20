@@ -38,6 +38,7 @@ const account = (id: string) => ({
   enabled: true,
   needsReauth: false,
   addedAt: new Date('2026-11-01T00:00:00.000Z'),
+  oauthAccount: { accountUuid: id, emailAddress: `${id}@example.test`, organizationUuid: 'org-x' },
 })
 
 describe('JsonConfigRepository', () => {
