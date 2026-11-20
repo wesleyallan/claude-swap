@@ -320,3 +320,26 @@ Separating secrets from preferences keeps the user-editable config safe to open,
   error and refetches on settle. The header theme toggle only flips light/dark (from the resolved
   theme); `system` is chosen in Settings. Locale catalogs are bundled statically (small);
   `IntlProvider` gets the browser `timeZone`. `lib/api.ts` = `hc<AppType>('/').api` + `parseResponse`.
+- 2026-11-19 — **Account status is server-side** (T09): `domain/account.ts#accountStatus` (disabled >
+  needs-reauth > exhausted > unknown (no snapshot or both windows null) > ok); `getDashboard`
+  returns `statuses` and the DTO adds `status` to each dashboard account (not to the import
+  response). The web only shapes data for display (`features/dashboard/model.ts`): bar tone =
+  error at ≥ the window's threshold, warning from 80 %, else success.
+- 2026-11-19 — **Dashboard** (T09): `@dnd-kit/react` 0.5 (the maintained rewrite; the legacy
+  `@dnd-kit/core` is unmaintained since 2024) with its default pointer + keyboard sensors, a drag
+  handle per row and the `Accessibility` plugin configured with i18n'd instructions and
+  announcements; explicit up/down buttons announce via an `aria-live` region and keep focus. All
+  account mutations go through one optimistic helper in `lib/query.ts` (cache update → rollback +
+  Base UI toast on error → refetch). "Use now" is disabled for the top, disabled or needs-reauth
+  account. While `engine.unknownLogin` is set the UI shows a warning banner with **Import account**
+  (`POST /accounts/import`), the engine tile reads "Paused" and no row is marked Active (the
+  stored `activeId` is stale). The engine-error banner shows the newest `error` activity recorded
+  within 60 s before `lastTickAt` (inferred, not an engine field). The remove button links to a
+  placeholder modal route `/accounts/$id/remove` (T10 fills it).
+- 2026-11-19 — **Usage chart** (T09): Recharts via shadcn `chart`, loaded with `React.lazy` (own
+  ~360 kB chunk). Two panels: 5-hour window over the last 24 h, weekly window over 7 days; one line
+  per account with points in range (`s<index>` keys, `--chart-1..5`), dashed threshold line, sr-only
+  latest-value summary per panel. The main chunk is ~720 kB (dnd-kit + toast added ~170 kB); fine
+  for a localhost app, revisit in T12's performance budget.
+- 2026-11-19 — **AA tokens** (T09): light `--muted-foreground` `#65635d` (DESIGN.md `#6c6a64` gave
+  4.48:1 on cards) and light `--destructive` `#b33b3b` (`#c64545` gave 4.0:1 on cards).

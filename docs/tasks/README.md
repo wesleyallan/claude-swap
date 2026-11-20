@@ -13,7 +13,7 @@ Read `AGENTS.md` and `docs/architecture.md` first; the architecture doc is the s
 | T06 | [Use cases & rotation engine](T06-engine.md) | [x] |
 | T07 | [HTTP server (Hono) & runtime](T07-server.md) | [x] |
 | T08 | [Web foundation: design system, theme, i18n, router](T08-web-foundation.md) | [x] |
-| T09 | [Dashboard: charts & sortable account list](T09-dashboard.md) | [ ] |
+| T09 | [Dashboard: charts & sortable account list](T09-dashboard.md) | [x] |
 | T10 | [Modal routes: add account, settings, remove](T10-modals.md) | [ ] |
 | T11 | [End-to-end test suite](T11-e2e.md) | [ ] |
 | T12 | [Service install, README & performance budget](T12-deploy.md) | [ ] |
