@@ -221,3 +221,15 @@ Separating secrets from preferences keeps the user-editable config safe to open,
   the backup is `backups/<ISO ts with - for :.>/{.credentials.json,.claude.json}` (0600, only the
   files that exist). Writes are serialized by the adapter's own mutex. `claudeAiOauth` reuses the
   secrets `oauthTokensSchema`; `CLAUDE_CONFIG_DIR=""` counts as unset.
+- 2026-11-19 — **Anthropic client** (`infrastructure/anthropic`, `AnthropicClient` implements both
+  `UsageApi` and `TokenRefresher`): `TokenRefresher.refresh` takes the whole previous
+  `OAuthTokens` (not just the refresh token) so the result is `{ ...previous, accessToken,
+  refreshToken, expiresAt, scopes? }`: `subscriptionType`, `rateLimitTier` and other keys are kept,
+  a missing `refresh_token` keeps the old one, `scope` (space-separated) replaces `scopes` only when
+  present. Typed errors live in `application/anthropic-errors.ts` so the engine can branch on them
+  (`UnauthorizedError` 401, `InvalidGrantError` 400 `invalid_grant`, `RateLimitedError` 429 with
+  `retryAfter` in **seconds** from delta-seconds or HTTP-date, `null` if absent/unparseable,
+  `NetworkError` fetch rejection incl. the 10 s timeout, `BadResponseError` any other status, non-JSON
+  or zod failure). Error messages carry status, error name or zod field paths only — never bodies,
+  headers or the original error/cause. 401/429 apply to both endpoints. `User-Agent` is
+  `claude-swap/<package.json version>` (JSON import, bundled). Empty env URL overrides count as unset.

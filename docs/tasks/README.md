@@ -9,7 +9,7 @@ Read `AGENTS.md` and `docs/architecture.md` first; the architecture doc is the s
 | T02 | [Domain model & rotation policy](T02-domain.md) | [x] |
 | T03 | [File persistence & repositories](T03-persistence.md) | [x] |
 | T04 | [Claude Code session adapter](T04-claude-code-adapter.md) | [x] |
-| T05 | [Anthropic usage & OAuth client](T05-anthropic-client.md) | [ ] |
+| T05 | [Anthropic usage & OAuth client](T05-anthropic-client.md) | [x] |
 | T06 | [Use cases & rotation engine](T06-engine.md) | [ ] |
 | T07 | [HTTP server (Hono) & runtime](T07-server.md) | [ ] |
 | T08 | [Web foundation: design system, theme, i18n, router](T08-web-foundation.md) | [ ] |
