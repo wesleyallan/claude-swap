@@ -19,7 +19,8 @@
     "test:e2e": "npm run build && playwright test",
     "check": "npm run lint && npm run typecheck && npm test",
     "service:install": "npm run build && node scripts/service.ts install",
-    "service:uninstall": "node scripts/service.ts uninstall"
+    "service:uninstall": "node scripts/service.ts uninstall",
+    "perf:budget": "npm run build && tsx scripts/perf-budget.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
