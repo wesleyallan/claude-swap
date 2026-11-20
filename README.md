@@ -35,8 +35,8 @@ npm run service:install
 
 `service:install` builds the app, writes `~/.config/systemd/user/claude-swap.service` with the
 absolute paths of your `node` binary and of this folder, then runs
-`systemctl --user daemon-reload` and `systemctl --user enable --now claude-swap.service`.
-Open <http://127.0.0.1:4747>.
+`systemctl --user daemon-reload`, `enable` and `restart claude-swap.service`, so running it
+again after `git pull` loads the new build. Open <http://127.0.0.1:4747>.
 
 - Preview without changing anything: `node scripts/service.ts install --dry-run`.
 - Logs: `journalctl --user -u claude-swap -f`.

@@ -1,6 +1,6 @@
-import { mkdtemp, readFile, rm, stat } from 'node:fs/promises'
+import { mkdtemp, readdir, readFile, rm, stat } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { configHome, install, renderUnit, uninstall } from './service'
 
@@ -43,14 +43,17 @@ describe('configHome', () => {
 })
 
 describe('install / uninstall', () => {
-  it('writes the unit, reloads and enables it', async () => {
+  it('writes the unit (temp + rename), reloads, enables and (re)starts it', async () => {
     const path = await install(opts())
     expect(path).toBe(join(dir, 'config/systemd/user/claude-swap.service'))
     expect(await readFile(path, 'utf8')).toContain('/opt/node/bin/node')
     expect((await stat(path)).mode & 0o777).toBe(0o644)
+    expect(await readdir(dirname(path))).toEqual(['claude-swap.service'])
+    // restart, not `enable --now`: a reinstall after an update must load the new build
     expect(calls).toEqual([
       ['--user', 'daemon-reload'],
-      ['--user', 'enable', '--now', 'claude-swap.service'],
+      ['--user', 'enable', 'claude-swap.service'],
+      ['--user', 'restart', 'claude-swap.service'],
     ])
   })
 

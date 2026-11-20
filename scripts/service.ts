@@ -2,7 +2,7 @@
 // Plain Node (type stripping), no dependencies, so it runs without dev tooling.
 import { execFileSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { parseArgs } from 'node:util'
@@ -42,7 +42,9 @@ export async function install(o: ServiceOptions): Promise<string> {
   const unit = renderUnit(await readFile(join(REPO, 'deploy', UNIT), 'utf8'), o)
   const steps = [
     ['--user', 'daemon-reload'],
-    ['--user', 'enable', '--now', UNIT],
+    ['--user', 'enable', UNIT],
+    // `enable --now` leaves a running service on the old build after an update.
+    ['--user', 'restart', UNIT],
   ]
   if (o.dryRun) {
     console.log(`# would write ${path}\n${unit}`)
@@ -50,7 +52,10 @@ export async function install(o: ServiceOptions): Promise<string> {
     return path
   }
   await mkdir(dirname(path), { recursive: true })
-  await writeFile(path, unit, { mode: 0o644 })
+  // Temp + rename: an interrupted write never leaves a truncated unit for daemon-reload.
+  const tmp = `${path}.${process.pid}.tmp`
+  await writeFile(tmp, unit, { mode: 0o644 })
+  await rename(tmp, path)
   for (const s of steps) o.run(s)
   return path
 }
