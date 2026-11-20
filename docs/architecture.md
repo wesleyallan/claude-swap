@@ -180,3 +180,18 @@ Separating secrets from preferences keeps the user-editable config safe to open,
 - 2026-11-19 — **One `tsconfig.json`** for server, web and configs (TypeScript 7, `moduleResolution:
   bundler`, `paths` without `baseUrl`, `noEmit`). tsc only type-checks; Vite builds the SPA, tsup
   (esbuild) bundles the server with npm deps left external (`npm ci --omit=dev` needed at runtime).
+- 2026-11-19 — **Exhaustion semantics** (`domain/usage.ts`): a window blocks only while
+  `utilization >= threshold` **and** `resetsAt > now`; `resetsAt` null or ≤ now never blocks; a
+  missing snapshot is "unknown", not exhausted. API "locked" state is not modelled separately
+  (assumed to surface as utilization ≥ threshold).
+- 2026-11-19 — **All exhausted, current not a candidate** → pick the account that *recovers* first,
+  i.e. the smallest `exhaustedUntil` (latest reset among its blocking windows), ties keep priority
+  order. `nextResetAt` (earliest reset of either window) stays a UI countdown helper only.
+- 2026-11-19 — **Selection reasons** are derived by position vs. `currentId`: chosen above current →
+  `auto-reset`, below → `auto-exhausted`; same account or unknown current → `top-priority` if it is
+  the first candidate, else `auto-exhausted`. `autoRotate: false` → `manual`. The engine labels
+  swaps caused by promote/reorder as `manual` itself (position alone reads them as `auto-reset`).
+- 2026-11-19 — `AccountId` is a plain `string` alias (no brand); ordering ops clamp `toIndex` to
+  the list bounds and throw `AccountNotFoundError` / `InvalidOrderError` (Error subclasses).
+- 2026-11-19 — **Coverage**: `npm test` runs `vitest run --coverage` (v8); `src/domain/**` must stay
+  at 100 % statements/branches/functions/lines. Domain test files may import packages (`vitest`).

@@ -45,7 +45,7 @@ for Hono, Vite, TanStack Router/Query, use-intl, Tailwind v4, shadcn, dnd-kit, P
 | Production | `npm run build && npm run start` |
 | Lint / format check | `npm run lint` (fix: `npm run format`) |
 | Type check | `npm run typecheck` |
-| Unit + integration tests | `npm test` (watch: `npm run test:watch`) |
+| Unit + integration tests (+ coverage, 100 % on `src/domain`) | `npm test` (watch: `npm run test:watch`) |
 | E2E tests | `npm run test:e2e` |
 | Everything CI runs | `npm run check` |
 
