@@ -287,10 +287,14 @@ describe('static + SPA fallback', () => {
     }
   })
 
-  it('omits the class for light and system themes', async () => {
-    for (const theme of ['light', 'system'] as const) {
+  it('marks an explicit light theme and leaves system to the client', async () => {
+    const cases = [
+      ['light', '<html lang="es" class="light">'],
+      ['system', '<html lang="es">'],
+    ] as const
+    for (const [theme, tag] of cases) {
       config.data = { ...config.data, preferences: { ...DEFAULT_PREFERENCES, theme, locale: 'es' } }
-      expect(await (await req('/')).text()).toContain('<html lang="es">')
+      expect(await (await req('/')).text()).toContain(tag)
     }
   })
 

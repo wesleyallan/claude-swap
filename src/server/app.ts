@@ -156,8 +156,8 @@ export function createApp(c: Container) {
       return ctx.text('UI not built: run `npm run build`', 503)
     }
     const { theme, locale } = (await c.config.load()).preferences
-    // `theme: system` is resolved client-side; locale is a validated enum, safe to inline.
-    const tag = `<html lang="${locale}"${theme === 'dark' ? ' class="dark"' : ''}>`
+    // `theme: system` gets no class (CSS follows prefers-color-scheme); both are validated enums.
+    const tag = `<html lang="${locale}"${theme === 'system' ? '' : ` class="${theme}"`}>`
     ctx.header('Cache-Control', 'no-cache')
     return ctx.html(html.replace(/<html[^>]*>/i, tag))
   }
