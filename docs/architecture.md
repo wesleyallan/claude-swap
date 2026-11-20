@@ -263,3 +263,30 @@ Separating secrets from preferences keeps the user-editable config safe to open,
   refresh token alive); other refresh errors are logged and retried next tick. A fresh `/login` of a
   `needsReauth` account (new refresh token seen at sync-back) clears the flag. A 401 on poll does not
   force a refresh (the 10-min window handles normal expiry).
+- 2026-11-19 — **Logger** (`infrastructure/system/logger.ts`, `JsonLogger`): one JSON line per call
+  (`{t, level, msg, ...fields}`; `error` to stderr). Fields are deep-redacted: keys matching
+  `/token|secret|authorization|password|cookie/i` → `[redacted]`, and `sk-ant-…` / `Bearer …`
+  substrings are masked in any string (message included). `Error` values log as `{name, message}`.
+- 2026-11-19 — **HTTP API** (`server/app.ts`): Host must be `localhost:<port>` or `127.0.0.1:<port>`
+  (checked on the request URL, which node-server builds from `Host`) → else 403 `forbidden-host`.
+  Non-GET/HEAD/OPTIONS with an `Origin` other than `http://<request host>` → 403 `forbidden-origin`
+  (`Origin: null` included; no Origin = non-browser client, allowed). Errors are JSON
+  `{ error: <code> }`: `validation` (400, + `issues[{path,message}]`, never the input),
+  `bad-request` (400, malformed JSON), `invalid-order` (400), `account-not-found` (404),
+  `not-logged-in` (409), `claude-code-file` (409), `not-found` (404 under `/api`), `internal` (500,
+  logged redacted). Mutations answer `{ ok: true }` (200; `POST /engine/run` 202, `POST
+  /accounts/import` 201 with the account DTO). `PATCH /accounts/:id` takes `label` (trimmed, 1–100)
+  and/or `enabled`; `PATCH /preferences` is a strict partial (`thresholds` whole, poll 10–86400 s).
+  All routes live in `app.ts` (one small router); split into `server/routes/` only if it grows.
+- 2026-11-19 — **DTO** (`server/dto.ts`): explicit field picks, dates as ISO strings; accounts drop
+  `oauthAccount` entirely. `engine.unknownLogin` (email or null) is exposed as-is: the UI shows
+  "unknown login, import it?" and knows the engine is not swapping while it is set.
+- 2026-11-19 — **Static**: `dist/web` (default `../web` next to the bundled `main.js`, override with
+  `CLAUDE_SWAP_WEB_DIR`). `/assets/*` → `Cache-Control: public, max-age=31536000, immutable`, a miss
+  is 404 (never the SPA); other files `no-cache`; every other GET returns `index.html` (`no-cache`)
+  with `<html lang="<locale>">` plus `class="dark"` only for `theme: dark` (`system` is resolved
+  client-side). No build → 503. `secureHeaders()` defaults only; no CSP yet (T08/T13 may add one).
+- 2026-11-19 — **Dev proxy**: Vite proxies `/api` with `changeOrigin` and rewrites a same-origin
+  (`http://<vite host>`) `Origin` to the API origin, so the guard needs no dev exception.
+- 2026-11-19 — **Runtime** (`server/main.ts`): binds `127.0.0.1:${PORT:-4747}`, logs `listening`
+  then starts the engine; SIGINT/SIGTERM stop the engine, close the server and force-exit after 5 s.
