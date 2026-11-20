@@ -15,11 +15,12 @@ import {
 import { Skeleton } from '@/web/components/ui/skeleton'
 import type { Dashboard as DashboardData } from '@/web/lib/api'
 import { useDashboard } from '@/web/lib/query'
-import { AccountList } from './account-list'
 import { lastTickError } from './model'
 import { StatTiles } from './stat-tiles'
 
 const UsageChart = lazy(() => import('./usage-chart'))
+// dnd-kit is ~40 kB gzip: keeping it out of the initial chunk holds the 200 kB budget (T12).
+const AccountList = lazy(() => import('./account-list').then((m) => ({ default: m.AccountList })))
 
 function ChartCard({ data }: { data: DashboardData }) {
   const t = useTranslations('chart')
@@ -121,14 +122,18 @@ function Loading() {
         ))}
       </div>
       <Skeleton className="h-80 rounded-2xl" />
-      <div className="flex flex-col gap-3">
-        {[0, 1, 2].map((i) => (
-          <Skeleton key={i} className="h-28 rounded-2xl" />
-        ))}
-      </div>
+      <ListSkeleton />
     </div>
   )
 }
+
+const ListSkeleton = () => (
+  <div className="flex flex-col gap-3">
+    {[0, 1, 2].map((i) => (
+      <Skeleton key={i} className="h-28 rounded-2xl" />
+    ))}
+  </div>
+)
 
 /** The one screen: banners, stat tiles, usage chart and the ordered account list. */
 export function Dashboard() {
@@ -167,12 +172,14 @@ export function Dashboard() {
                 <h2 id="accounts-title" className="font-heading text-title-lg">
                   {tAccounts('listLabel')}
                 </h2>
-                <AccountList
-                  accounts={data.accounts}
-                  usage={data.usage}
-                  activeId={data.engine.unknownLogin ? null : data.activeId}
-                  thresholds={data.preferences.thresholds}
-                />
+                <Suspense fallback={<ListSkeleton />}>
+                  <AccountList
+                    accounts={data.accounts}
+                    usage={data.usage}
+                    activeId={data.engine.unknownLogin ? null : data.activeId}
+                    thresholds={data.preferences.thresholds}
+                  />
+                </Suspense>
               </section>
             </>
           )}

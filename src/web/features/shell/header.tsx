@@ -1,11 +1,17 @@
 import { Link } from '@tanstack/react-router'
 import { PlusIcon, SettingsIcon } from 'lucide-react'
+import { lazy, Suspense } from 'react'
 import { useTranslations } from 'use-intl'
 import { Logo } from '@/web/components/logo'
 import { Button } from '@/web/components/ui/button'
+import { Skeleton } from '@/web/components/ui/skeleton'
 import { EngineStatus } from './engine-status'
-import { LocaleSelect } from './locale-select'
 import { ThemeToggle } from './theme-toggle'
+
+// Base UI Select + floating-ui stay out of the initial chunk (200 kB gzip budget, T12).
+const LocaleSelect = lazy(() =>
+  import('./locale-select').then((m) => ({ default: m.LocaleSelect })),
+)
 
 export function Header() {
   const t = useTranslations()
@@ -29,7 +35,9 @@ export function Header() {
             <SettingsIcon data-icon="inline-start" />
             <span className="max-md:sr-only">{t('header.settings')}</span>
           </Button>
-          <LocaleSelect />
+          <Suspense fallback={<Skeleton className="h-10 w-16 rounded-lg sm:w-32" />}>
+            <LocaleSelect />
+          </Suspense>
           <ThemeToggle />
         </nav>
       </div>
