@@ -33,8 +33,9 @@ of them active in Claude Code and:
 - **swaps back up** to a higher-priority account as soon as its limit resets;
 - lets you **swap by hand**: "Use now" (or dragging an account to the top) makes it active.
 
-Everything runs on your machine: one Node process bound to `127.0.0.1`, JSON files for state, no
-database, no telemetry. The web dashboard is optional; the engine works with no browser open. The
+It is built to stay out of your way: one small Node process bound to `127.0.0.1` (under 100 MB
+of memory when idle), plain JSON files for state, no database, no Docker, nothing to install besides
+Node.js, and no telemetry. The web dashboard is optional; the engine works with no browser open. The
 dashboard has built-in documentation (the book icon in the top bar) in every supported language.
 
 ![Dashboard, light theme](docs/screenshots/dashboard-light.png)
@@ -114,6 +115,8 @@ made).
   Settings (95 % and 98 % by default) and that window has not reset yet.
 - Every poll interval (3 minutes by default) the engine reads usage for each account, refreshes
   the tokens of inactive accounts before they expire, and picks the active account again.
+- **Force check** (the circular arrow in the top bar) runs a check now and restarts the interval
+  countdown, so it never adds a second check right after.
 - If every account is at a limit, it picks the one that frees up first.
 - A swap writes the chosen account's login into Claude Code's files: `claudeAiOauth` in
   `.credentials.json` and `oauthAccount` in `.claude.json`. Every other key in both files is kept.
@@ -147,7 +150,7 @@ claude-swap keeps its files in `$CLAUDE_SWAP_HOME`, else `$XDG_CONFIG_HOME/claud
 | --- | --- |
 | `config.json` | `preferences` (`theme`, `locale`, `autoRotate`, `thresholds.fiveHour`, `thresholds.sevenDay`, `pollIntervalSec`) and `accounts` (label, email, plan, enabled; array order = priority). Safe to read. |
 | `secrets.json` | OAuth tokens per account. Never share it. |
-| `state.json` | Latest usage per account, 7 days of usage history, last 200 activity entries. |
+| `state.json` | Latest usage per account, usage history (one point per account every 3 minutes for the last 24 h, every 15 minutes up to 7 days), last 200 activity entries. |
 | `backups/` | Copies of Claude Code's `.credentials.json` and `.claude.json` taken before the first write. |
 
 Claude Code's own files: `${CLAUDE_CONFIG_DIR:-~/.claude}/.credentials.json` and `~/.claude.json`
@@ -198,8 +201,35 @@ Tests and `perf:budget` never touch your real `~/.claude`, `~/.claude.json` or
 `~/.config/claude-swap`: they run the server with temporary `HOME`, `CLAUDE_SWAP_HOME` and
 `CLAUDE_CONFIG_DIR` against a mock Anthropic API (`tests/e2e/mock-anthropic.ts`).
 
-Design: [`docs/architecture.md`](docs/architecture.md). Visual language: [`DESIGN.md`](DESIGN.md).
-Contributor and agent rules: [`AGENTS.md`](AGENTS.md).
+Developer documentation (stack and why, architecture, structure, engine, API, patterns, how it was
+built) is a page inside the app, in every supported language: open <http://127.0.0.1:4747/doc-dev>.
+It is not linked from the dashboard. Design: [`docs/architecture.md`](docs/architecture.md). Visual
+language: [`DESIGN.md`](DESIGN.md). Contributor and agent rules: [`AGENTS.md`](AGENTS.md).
+
+### Stack
+
+| Part | Technology |
+| --- | --- |
+| Server | Node 24, Hono, zod, bundled with tsup |
+| Web | Vite, React 19, TanStack Router + Query, Tailwind CSS v4, shadcn/ui (Base UI), Recharts, dnd-kit, use-intl |
+| Quality | TypeScript 7 (strict), Biome, Vitest + Testing Library, Playwright + axe |
+
+The code is hexagonal (`domain` → `application` → `infrastructure` / `server` → `web`), and the
+layer rules are enforced by a test (`src/architecture.test.ts`). The `README` and `/doc-dev` are
+updated together with any change they describe.
+
+## Author
+
+Made by **Wesley Silva** ([wesleyallan](https://github.com/wesleyallan)). Thank you for using
+Claude Swap! If it helps you, please **give the project a ⭐ on GitHub**: it helps other people
+find it.
+
+[GitHub](https://github.com/wesleyallan) ·
+[LinkedIn](https://www.linkedin.com/in/wesley-silva-229724208/) ·
+[Instagram](https://www.instagram.com/wesleyallansilva) ·
+[Facebook](https://facebook.com/wesley.allansilva) ·
+[Discord](https://discord.gg/hQN2k8N6jf) ·
+[E-mail](mailto:wesley.allansilva@gmail.com)
 
 ## License
 

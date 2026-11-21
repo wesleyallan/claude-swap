@@ -113,7 +113,7 @@ src/
     main.ts          start engine + HTTP server, graceful shutdown (SIGTERM)
   web/
     main.tsx, app.tsx (providers), router.tsx (code-based routes incl. modal routes),
-    features/{shell,dashboard,accounts,settings}, components/ui (shadcn),
+    features/{shell,dashboard,accounts,settings,docs,dev-docs}, components/ui (shadcn),
     components/route-modal.tsx, lib/{api.ts, query.ts}, i18n/{index.ts, messages/*.json}
 tests/e2e/           Playwright specs, fixtures (temp HOME), mock-anthropic server
 deploy/              claude-swap.service (systemd user unit template)
@@ -124,7 +124,7 @@ scripts/             service.ts (install/uninstall the unit), perf-budget.ts
 
 - `config.json`: `{ version, preferences: { theme: "light"|"dark"|"system", locale: "en"|"es"|"pt-BR", autoRotate, thresholds: { fiveHour: 95, sevenDay: 98 }, pollIntervalSec: 180 }, accounts: [{ id (=accountUuid), label, email, organizationName, subscriptionType, enabled, addedAt }] }` — array order **is** the priority.
 - `secrets.json` (0600): `{ version, tokens: { [accountId]: claudeAiOauth } }`.
-- `state.json`: `{ version, usage: { [accountId]: { fiveHour, sevenDay, fetchedAt, error? } }, history: [{ t, accountId, fiveHour, sevenDay }] (ring buffer ~7 days, downsampled), activity: [{ t, type, ... }] (last 200), lastActiveId }`.
+- `state.json`: `{ version, usage: { [accountId]: { fiveHour, sevenDay, fetchedAt, error? } }, history: [{ t, accountId, fiveHour, sevenDay }] (one point per account per 3 min for 24 h, per 15 min up to 7 days), activity: [{ t, type, ... }] (last 200), lastActiveId }`.
 
 Separating secrets from preferences keeps the user-editable config safe to open, share or diff.
 
@@ -140,7 +140,8 @@ Separating secrets from preferences keeps the user-editable config safe to open,
 - Modals are **routes** (`/accounts/new`, `/settings`, `/accounts/:id/remove`) rendered over the
   dashboard (TanStack Router masking / layout outlet), so they are linkable and back-button safe.
 - Theme + locale persist in `config.json`; the server injects `class="dark|light"` and `lang` into
-  `index.html` → no flash. Data refresh: TanStack Query polling (10 s) while the tab is visible.
+  `index.html` → no flash. Data refresh: TanStack Query polling (10 s) while the tab is visible;
+  the usage history is a separate query fetched once per engine tick.
 - Quality bar: DESIGN.md tokens, WCAG AA contrast in both themes, full keyboard support,
   `prefers-reduced-motion`, responsive down to 360 px.
 
@@ -211,8 +212,9 @@ Separating secrets from preferences keeps the user-editable config safe to open,
   document; `SecretsRepository` is keyed (`get/set/delete(accountId)`, read-modify-write under the
   file mutex). `OAuthTokens` requires `accessToken`, `refreshToken`, `expiresAt` (epoch ms) and
   keeps every other `claudeAiOauth` key.
-- 2026-11-19 — **History ring buffer** (applied in `StateRepository.save`): drop points > 7 days,
-  keep the *last* point per account per 15-min bucket once older than 24 h, hard cap 10 000 points;
+- 2026-11-19 — **History ring buffer** (applied in `StateRepository.save`; retention replaced on
+  2026-11-21, see below): drop points > 7 days, keep the *last* point per account per 15-min bucket
+  once older than 24 h, hard cap 10 000 points;
   activity keeps the last 200 entries. Activity types: `swap {from, to, reason}` and
   `account-added | account-removed | needs-reauth | error {accountId?, message?}`.
 - 2026-11-19 — **Claude Code adapter** (`infrastructure/claude-code`, `FileClaudeCodeSession`):
@@ -278,8 +280,8 @@ Separating secrets from preferences keeps the user-editable config safe to open,
   `{ error: <code> }`: `validation` (400, + `issues[{path,message}]`, never the input),
   `bad-request` (400, malformed JSON), `invalid-order` (400), `account-not-found` (404),
   `not-logged-in` (409), `claude-code-file` (409), `not-found` (404 under `/api`), `internal` (500,
-  logged redacted). Mutations answer `{ ok: true }` (200; `POST /engine/run` 202, `POST
-  /accounts/import` 201 with the account DTO). `PATCH /accounts/:id` takes `label` (trimmed, 1–100)
+  logged redacted). Mutations answer `{ ok: true }` (200; `POST /engine/run` 200 once the tick is
+  done, see 2026-11-21; `POST /accounts/import` 201 with the account DTO). `PATCH /accounts/:id` takes `label` (trimmed, 1–100)
   and/or `enabled`; `PATCH /preferences` is a strict partial (`thresholds` whole, poll 10–86400 s).
   All routes live in `app.ts` (one small router); split into `server/routes/` only if it grows.
 - 2026-11-19 — **DTO** (`server/dto.ts`): explicit field picks, dates as ISO strings; accounts drop
@@ -447,3 +449,25 @@ Separating secrets from preferences keeps the user-editable config safe to open,
   engine run they trigger, so the refetch after the mutation already shows the real active
   account. "Use now" also marks a healthy (`ok`) account active optimistically to hide the
   1–2 s wait.
+- 2026-11-21 — **History bounded by time, not count**: `compactHistory` keeps the newest point per
+  account per 3-min bucket for the last 24 h and per 15-min bucket up to 7 days; the 10 000-point
+  cap is gone. At most ~1 060 points per account whatever the poll interval (measured: 10 accounts
+  or a 10 s interval used to truncate the 7-day, even the 24 h, chart). JSON files stay: writes are
+  12–18 ms per tick, and SQLite (`node:sqlite` is still release candidate) would not shrink the
+  responses, which were the real cost.
+- 2026-11-21 — **`GET /api/history` + gzip**: the 10 s dashboard poll no longer carries the history
+  (360 KB–1.1 MB with 3–10 accounts). The web keys the history query on `engine.lastTickAt`, so it
+  is fetched once per tick. `hono/compress` gzips every response over 1 KB (history ≈ 10–32 KB).
+- 2026-11-21 — **Force check**: a header button calls `POST /api/engine/run`, which now awaits the
+  (debounced) tick and answers 200, so the UI refetches the result. Every tick reschedules the next
+  one a full `pollIntervalSec` later, so a forced check restarts the countdown. shortcut: a forced
+  check while a scheduled tick is in flight queues right behind it; join the running tick if that
+  ever matters.
+- 2026-11-21 — **Modal title icons**: `RouteModal` takes an optional `icon` (the header icon that
+  opened it), shown in a brand-tinted tile before the title (Settings, Documentation).
+- 2026-11-21 — **Developer docs at `/doc-dev`**: a full page (child of the root route, lazy chunk,
+  not linked anywhere) rendering `features/dev-docs/content/{en,es,pt-BR}.md` with the same
+  `parseDocs` as the modal (sections get slug ids for the sticky index). It and the README must be
+  updated in the same change as anything they describe (rule in `AGENTS.md`). External links in
+  bundled markdown open in a new tab.
+

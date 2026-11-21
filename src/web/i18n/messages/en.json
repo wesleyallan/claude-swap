@@ -162,5 +162,10 @@
     "missing": "This account isn't in your list anymore.",
     "remove": "Remove account",
     "removed": "{name} removed"
+  },
+  "devDocs": {
+    "title": "Developer documentation",
+    "intro": "How Claude Swap is built: the technologies, the architecture and why each choice was made.",
+    "sections": "Sections"
   }
 }

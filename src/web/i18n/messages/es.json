@@ -162,5 +162,10 @@
     "missing": "Esta cuenta ya no está en tu lista.",
     "remove": "Eliminar cuenta",
     "removed": "{name} eliminada"
+  },
+  "devDocs": {
+    "title": "Documentación para desarrolladores",
+    "intro": "Cómo está construido Claude Swap: las tecnologías, la arquitectura y el porqué de cada decisión.",
+    "sections": "Secciones"
   }
 }

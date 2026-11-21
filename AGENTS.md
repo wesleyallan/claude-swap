@@ -18,7 +18,7 @@ hosts the engine and a small JSON API, and serves a static React SPA. The web UI
 the engine works with no browser open. No database: all state lives in JSON files.
 
 Full design: [`docs/architecture.md`](docs/architecture.md). Work plan: [`docs/tasks/`](docs/tasks/README.md).
-Visual language: [`DESIGN.md`](DESIGN.md).
+Visual language: [`DESIGN.md`](DESIGN.md). Developer docs in the app: `/doc-dev` (not linked; type the URL).
 
 ## Stack
 
@@ -65,7 +65,8 @@ src/
                    static SPA serving. Thin: validate input, call a use case, map to DTO.
   web/             React SPA: router.tsx (code-based routes), components/ (ui/ = shadcn
                    primitives, add with `npx shadcn@latest add <name>`), features/,
-                   lib/api.ts (Hono RPC client), i18n/messages/{en,es,pt-BR}.json
+                   lib/api.ts (Hono RPC client), i18n/messages/{en,es,pt-BR}.json,
+                   features/docs (user guide modal), features/dev-docs (/doc-dev page)
 tests/e2e/         Playwright specs + mock Anthropic API server
 deploy/            systemd user unit template
 scripts/           service install/uninstall, perf budget (run with node / tsx)
@@ -128,6 +129,13 @@ Canonical copies live in `.agents/skills/`; `.claude/skills/*` are symlinks to t
 Most relevant: `tdd`, `vitest`, `vercel-react-best-practices`,
 `vercel-composition-patterns`, `shadcn`, `design-taste-frontend`, `ui-ux-pro-max`,
 `web-design-guidelines`, `playwright-best-practices`, `playwright-cli`, `graphify`.
+
+## Keep the docs current
+
+`README.md` and the developer page `/doc-dev` (`src/web/features/dev-docs/content/{en,es,pt-BR}.md`)
+describe the system as it is. A change to the stack, structure, API routes, engine, data files or
+security model updates both **in the same change**, in all three locales. User-facing behaviour also
+updates the in-app docs (`src/web/features/docs/content/`).
 
 ## Working on a task
 

@@ -80,7 +80,14 @@ const removeAccountRoute = createRoute({
   ),
 })
 
+const devDocsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: 'doc-dev',
+  component: lazyRouteComponent(() => import('./features/dev-docs/dev-docs-page'), 'DevDocsPage'),
+})
+
 const routeTree = rootRoute.addChildren([
+  devDocsRoute,
   dashboardRoute.addChildren([
     indexRoute,
     settingsRoute,

@@ -6,6 +6,9 @@ import { AppProviders } from '@/web/app'
 import type { Dashboard } from '@/web/lib/api'
 import { createQueryClient } from '@/web/lib/query'
 import { createAppRouter } from '@/web/router'
+import devEn from './dev-docs/content/en.md?raw'
+import devEs from './dev-docs/content/es.md?raw'
+import devPtBR from './dev-docs/content/pt-BR.md?raw'
 import en from './docs/content/en.md?raw'
 import es from './docs/content/es.md?raw'
 import ptBR from './docs/content/pt-BR.md?raw'
@@ -262,6 +265,30 @@ it('force check runs the engine now and refetches the dashboard', async () => {
     ),
   )
   await waitFor(() => expect(dashboardFetches()).toBeGreaterThan(before))
+})
+
+it('/doc-dev: a full page with a section index, in the UI language', async () => {
+  dashboard = { ...dashboard, preferences: { ...dashboard.preferences, locale: 'pt-BR' } }
+  renderAt('/doc-dev')
+  expect(
+    await screen.findByRole('heading', { level: 1, name: 'Documentação para desenvolvedores' }),
+  ).toBeInTheDocument()
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  const nav = screen.getByRole('navigation', { name: 'Seções' })
+  expect(within(nav).getByRole('link', { name: 'Arquitetura' })).toHaveAttribute(
+    'href',
+    '#arquitetura',
+  )
+  expect(screen.getByRole('heading', { level: 2, name: 'Arquitetura' })).toHaveAttribute(
+    'id',
+    'arquitetura',
+  )
+})
+
+it('/doc-dev: every locale has the same sections', () => {
+  const counts = [devEn, devEs, devPtBR].map((md) => parseDocs(md).length)
+  expect(counts[0]).toBeGreaterThan(5)
+  expect(new Set(counts).size).toBe(1)
 })
 
 it('docs: every locale has the same sections', () => {
