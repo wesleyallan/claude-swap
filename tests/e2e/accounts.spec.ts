@@ -35,6 +35,10 @@ test('imports two accounts through the Add account modal', async ({ page, app, r
   expect(await apiOrder(request)).toEqual(['Alpha', 'Bravo'])
   // Bravo was the last /login, but Alpha is first in the list: the engine swaps back to it.
   await expectLive(app, a)
+  // A swap writes the credentials first, then .claude.json: wait for the second write too.
+  await expect
+    .poll(async () => (await app.claudeFiles()).claudeJson.oauthAccount?.accountUuid)
+    .toBe(a.uuid)
   const files = await app.claudeFiles()
   expect(files.credentials.mcpOAuth).toEqual({ fake: 'keep-me' })
   expect(files.claudeJson).toMatchObject({ numStartups: 7, oauthAccount: { accountUuid: a.uuid } })

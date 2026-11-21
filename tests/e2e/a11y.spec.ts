@@ -32,10 +32,21 @@ for (const theme of ['light', 'dark'] as const) {
     await expect(page.getByRole('list', { name: 'Accounts by priority' })).toBeVisible()
     await expectNoViolations(page)
 
-    for (const path of ['/settings', '/accounts/new', `/accounts/${accounts[1].id}/remove`]) {
+    for (const path of [
+      '/settings',
+      '/docs',
+      '/accounts/new',
+      `/accounts/${accounts[1].id}/remove`,
+    ]) {
       await page.goto(path)
       await expect(page.locator('[data-slot="dialog-content"]')).toBeVisible()
       await expectNoViolations(page)
     }
+
+    await page.goto('/doc-dev')
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Developer documentation' }),
+    ).toBeVisible()
+    await expectNoViolations(page)
   })
 }
