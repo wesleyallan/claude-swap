@@ -66,7 +66,7 @@ export function Header() {
           to="/"
           className="flex items-center gap-2.5 rounded-md font-heading text-title-lg tracking-tight outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
         >
-          <Logo className="size-8 drop-shadow-sm" />
+          <Logo className="size-8" />
           <span className="max-[400px]:sr-only">{t('app.name')}</span>
         </Link>
         <EngineStatus />
