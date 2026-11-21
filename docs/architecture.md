@@ -430,13 +430,20 @@ Separating secrets from preferences keeps the user-editable config safe to open,
 - 2026-11-20 — **Visual checks** (T13): `theme-color` metas follow `prefers-color-scheme` only (a
   forced theme keeps the system's browser-chrome colour; cosmetic). Transitions list their
   properties instead of `transition-all`; dialogs use `overscroll-behavior: contain`.
-- 2026-11-21 — **Brand mark**: swap arrows over our eight-spoke asterisk on a coral tile
-  (`src/web/public/logo.svg` is the source; `Logo` inlines the same drawing). Icons are static
+- 2026-11-21 — **Brand mark**: our eight-spoke asterisk in solid coral (`#d97757`) with the swap
+  arrows in its hollow centre, no background tile (`src/web/public/logo.svg` is the source;
+  `Logo` inlines the same drawing). The PNGs and `favicon.ico` are rendered from it; only
+  `apple-touch-icon.png` gets the cream page colour, since iOS paints transparency black. Icons are static
   files under Vite's `public/`, served by the catch-all `files(..., 'no-cache')` route.
 - 2026-11-21 — **Header icon buttons + tooltips**: Settings and Documentation are icon-only links
-  with a Base UI tooltip (same text as `aria-label`). Tooltip/floating-ui joins the initial chunk;
+  with a Base UI tooltip (same text as `aria-label`). One app-wide `TooltipProvider` (150 ms
+  delay; Base UI's 600 ms default read as "no tooltip"). Tooltip/floating-ui joins the initial chunk;
   measured 187 kB gzip, still under the 200 kB budget.
 - 2026-11-21 — **In-app documentation**: `/docs` modal route (lazy chunk) renders bundled
   per-locale markdown (`features/docs/content/{en,es,pt-BR}.md`, split on `## `) with `marked`.
   Content is ours, so it is rendered as HTML without sanitising; never feed it user input.
 - 2026-11-21 — **Tab title**: `<active account label> - Claude Swap`, from the polled dashboard.
+- 2026-11-21 — **Swaps answer after the tick**: reorder, "Use now" and enable/disable await the
+  engine run they trigger, so the refetch after the mutation already shows the real active
+  account. "Use now" also marks a healthy (`ok`) account active optimistically to hide the
+  1–2 s wait.
