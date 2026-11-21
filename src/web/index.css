@@ -161,3 +161,45 @@
   }
   /* biome-ignore-end lint/complexity/noImportantStyles: reduced motion must beat component animations */
 }
+
+/* Documentation modal: rendered markdown in the editorial voice of DESIGN.md. */
+@layer components {
+  .docs-prose {
+    @apply max-w-[68ch] text-[15px] leading-7 text-foreground;
+  }
+  .docs-prose > * + * {
+    @apply mt-4;
+  }
+  .docs-prose h3 {
+    @apply mt-8 font-heading text-title-md;
+  }
+  .docs-prose strong {
+    @apply font-semibold;
+  }
+  .docs-prose ul,
+  .docs-prose ol {
+    @apply flex flex-col gap-1.5 pl-5;
+  }
+  .docs-prose ul {
+    @apply list-disc marker:text-brand;
+  }
+  .docs-prose ol {
+    @apply list-decimal marker:text-muted-foreground;
+  }
+  .docs-prose code {
+    @apply rounded-md bg-muted px-1.5 py-0.5 font-mono text-[0.85em];
+  }
+  .docs-prose blockquote {
+    @apply rounded-r-lg border-l-4 border-brand bg-muted px-4 py-3 text-muted-foreground;
+  }
+  .docs-prose table {
+    @apply w-full border-collapse overflow-hidden rounded-lg text-sm;
+  }
+  .docs-prose th,
+  .docs-prose td {
+    @apply border-b px-3 py-2 text-left align-top;
+  }
+  .docs-prose th {
+    @apply bg-muted font-medium;
+  }
+}

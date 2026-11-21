@@ -6,6 +6,10 @@ import { AppProviders } from '@/web/app'
 import type { Dashboard } from '@/web/lib/api'
 import { createQueryClient } from '@/web/lib/query'
 import { createAppRouter } from '@/web/router'
+import en from './docs/content/en.md?raw'
+import es from './docs/content/es.md?raw'
+import ptBR from './docs/content/pt-BR.md?raw'
+import { parseDocs } from './docs/docs-modal'
 
 const account = (id: string) => ({
   id,
@@ -212,4 +216,30 @@ it('remove: an unknown id only offers to close', async () => {
   const d = await dialog('Remove account')
   expect(await within(d).findByText("This account isn't in your list anymore.")).toBeInTheDocument()
   expect(within(d).queryByRole('button', { name: 'Remove account' })).not.toBeInTheDocument()
+})
+
+it('docs: lists the sections and shows the one picked', async () => {
+  const user = userEvent.setup()
+  renderAt('/')
+  await user.click(await screen.findByRole('button', { name: 'Documentation' }))
+  const d = await dialog('Documentation')
+  const nav = within(d).getByRole('navigation', { name: 'Sections' })
+  expect(within(d).getByRole('heading', { name: 'Overview' })).toBeInTheDocument()
+  await user.click(within(nav).getByRole('button', { name: 'Settings' }))
+  expect(within(d).getByRole('heading', { name: 'Settings' })).toBeInTheDocument()
+  expect(within(nav).getByRole('button', { name: 'Settings' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  )
+})
+
+it('docs: every locale has the same sections', () => {
+  const counts = [en, es, ptBR].map((md) => parseDocs(md).length)
+  expect(counts[0]).toBeGreaterThan(3)
+  expect(new Set(counts).size).toBe(1)
+})
+
+it('names the browser tab after the active account', async () => {
+  renderAt('/')
+  await waitFor(() => expect(document.title).toBe('Account A - Claude Swap'))
 })

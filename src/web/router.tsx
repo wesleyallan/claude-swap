@@ -58,6 +58,11 @@ const settingsRoute = createRoute({
     'SettingsModal',
   ),
 })
+const docsRoute = createRoute({
+  getParentRoute: () => dashboardRoute,
+  path: 'docs',
+  component: lazyRouteComponent(() => import('./features/docs/docs-modal'), 'DocsModal'),
+})
 const addAccountRoute = createRoute({
   getParentRoute: () => dashboardRoute,
   path: 'accounts/new',
@@ -76,7 +81,13 @@ const removeAccountRoute = createRoute({
 })
 
 const routeTree = rootRoute.addChildren([
-  dashboardRoute.addChildren([indexRoute, settingsRoute, addAccountRoute, removeAccountRoute]),
+  dashboardRoute.addChildren([
+    indexRoute,
+    settingsRoute,
+    docsRoute,
+    addAccountRoute,
+    removeAccountRoute,
+  ]),
 ])
 
 export const createAppRouter = (history?: RouterHistory) =>

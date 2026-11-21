@@ -17,17 +17,20 @@ import {
 export function RouteModal({
   title,
   description,
+  className,
   children,
 }: {
   title: string
   description?: ReactNode
+  /** Extra classes for the dialog panel (e.g. a wider max width). */
+  className?: string
   children?: ReactNode
 }) {
   const navigate = useNavigate()
   const t = useTranslations('modal')
   return (
     <Dialog open onOpenChange={(open) => !open && navigate({ to: '/' })}>
-      <DialogContent closeLabel={t('close')}>
+      <DialogContent closeLabel={t('close')} className={className}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}

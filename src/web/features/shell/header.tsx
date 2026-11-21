@@ -1,10 +1,12 @@
 import { Link } from '@tanstack/react-router'
-import { PlusIcon, SettingsIcon } from 'lucide-react'
-import { lazy, Suspense } from 'react'
+import { BookOpenIcon, PlusIcon, SettingsIcon } from 'lucide-react'
+import { lazy, type ReactNode, Suspense, useEffect } from 'react'
 import { useTranslations } from 'use-intl'
 import { Logo } from '@/web/components/logo'
 import { Button } from '@/web/components/ui/button'
 import { Skeleton } from '@/web/components/ui/skeleton'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/web/components/ui/tooltip'
+import { useDashboard } from '@/web/lib/query'
 import { EngineStatus } from './engine-status'
 import { ThemeToggle } from './theme-toggle'
 
@@ -13,16 +15,58 @@ const LocaleSelect = lazy(() =>
   import('./locale-select').then((m) => ({ default: m.LocaleSelect })),
 )
 
+/** Icon-only link to a modal route; the tooltip shows the same text as its accessible name. */
+function IconLink({
+  to,
+  label,
+  icon,
+}: {
+  to: '/docs' | '/settings'
+  label: string
+  icon: ReactNode
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={label}
+            nativeButton={false}
+            render={<Link to={to} />}
+          />
+        }
+      >
+        {icon}
+      </TooltipTrigger>
+      <TooltipContent side="bottom">{label}</TooltipContent>
+    </Tooltip>
+  )
+}
+
+/** Browser tab: "<active account> - Claude Swap", or just the app name. */
+function useDocumentTitle(app: string) {
+  const { data } = useDashboard()
+  const active = data?.engine.unknownLogin
+    ? undefined
+    : data?.accounts.find((a) => a.id === data.activeId)?.label
+  useEffect(() => {
+    document.title = active ? `${active} - ${app}` : app
+  }, [active, app])
+}
+
 export function Header() {
   const t = useTranslations()
+  useDocumentTitle(t('app.name'))
   return (
     <header className="border-b bg-background">
       <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-2 px-4 sm:gap-3 sm:px-6">
         <Link
           to="/"
-          className="flex items-center gap-2 rounded-md font-heading text-title-lg tracking-tight outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+          className="flex items-center gap-2.5 rounded-md font-heading text-title-lg tracking-tight outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
         >
-          <Logo className="size-6 text-brand" />
+          <Logo className="size-8 drop-shadow-sm" />
           <span className="max-[400px]:sr-only">{t('app.name')}</span>
         </Link>
         <EngineStatus />
@@ -31,10 +75,8 @@ export function Header() {
             <PlusIcon data-icon="inline-start" />
             <span className="max-md:sr-only">{t('header.addAccount')}</span>
           </Button>
-          <Button variant="ghost" nativeButton={false} render={<Link to="/settings" />}>
-            <SettingsIcon data-icon="inline-start" />
-            <span className="max-md:sr-only">{t('header.settings')}</span>
-          </Button>
+          <IconLink to="/docs" label={t('header.docs')} icon={<BookOpenIcon />} />
+          <IconLink to="/settings" label={t('header.settings')} icon={<SettingsIcon />} />
           <Suspense fallback={<Skeleton className="h-10 w-16 rounded-lg sm:w-32" />}>
             <LocaleSelect />
           </Suspense>

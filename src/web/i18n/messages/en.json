@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "claude-swap",
+    "name": "Claude Swap",
     "skipToContent": "Skip to content"
   },
   "header": {
@@ -8,7 +8,8 @@
     "settings": "Settings",
     "language": "Language",
     "switchToDark": "Switch to dark theme",
-    "switchToLight": "Switch to light theme"
+    "switchToLight": "Switch to light theme",
+    "docs": "Documentation"
   },
   "engine": {
     "label": "Engine status",
@@ -43,7 +44,9 @@
     "settingsTitle": "Settings",
     "addAccountTitle": "Add account",
     "removeAccountTitle": "Remove account",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "docsTitle": "Documentation",
+    "docsSections": "Sections"
   },
   "stats": {
     "label": "Summary",
