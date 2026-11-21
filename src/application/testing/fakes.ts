@@ -164,6 +164,11 @@ export class FakeEngine implements EngineControl {
     this.runs.push(options)
     return this.gate
   }
+  checks = 0
+  checkNow() {
+    this.checks++
+    return this.gate
+  }
   status() {
     return this.current
   }

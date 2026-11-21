@@ -130,7 +130,7 @@ export function createApp(container: Container) {
       ctx.json(await updatePreferences(container, ctx.req.valid('json') as Partial<Preferences>)),
     )
     .post('/engine/run', async (ctx) => {
-      await container.engine.runNow()
+      await container.engine.checkNow()
       return ok(ctx)
     })
 

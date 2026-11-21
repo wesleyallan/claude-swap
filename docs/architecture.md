@@ -458,11 +458,13 @@ Separating secrets from preferences keeps the user-editable config safe to open,
 - 2026-11-21 — **`GET /api/history` + gzip**: the 10 s dashboard poll no longer carries the history
   (360 KB–1.1 MB with 3–10 accounts). The web keys the history query on `engine.lastTickAt`, so it
   is fetched once per tick. `hono/compress` gzips every response over 1 KB (history ≈ 10–32 KB).
-- 2026-11-21 — **Force check**: a header button calls `POST /api/engine/run`, which now awaits the
-  (debounced) tick and answers 200, so the UI refetches the result. Every tick reschedules the next
-  one a full `pollIntervalSec` later, so a forced check restarts the countdown. shortcut: a forced
-  check while a scheduled tick is in flight queues right behind it; join the running tick if that
-  ever matters.
+- 2026-11-21 — **Force check**: a header button calls `POST /api/engine/run`, which awaits
+  `engine.checkNow()` and answers 200, so the UI refetches the result. `checkNow` joins a tick
+  already in flight (no second poll right behind it), else runs a debounced tick like `runNow`.
+  Mutations keep `runNow`, which queues behind a running tick, because they need a tick that starts
+  after their change. Every tick reschedules the next one a full `pollIntervalSec` later, so a
+  forced check restarts the countdown. The e2e `runEngine` helper calls the route twice: the first
+  call may join a tick that polled before the test changed the mock, the second is always fresh.
 - 2026-11-21 — **Modal title icons**: `RouteModal` takes an optional `icon` (the header icon that
   opened it), shown in a brand-tinted tile before the title (Settings, Documentation).
 - 2026-11-21 — **Developer docs at `/doc-dev`**: a full page (child of the root route, lazy chunk,

@@ -116,7 +116,8 @@ made).
 - Every poll interval (3 minutes by default) the engine reads usage for each account, refreshes
   the tokens of inactive accounts before they expire, and picks the active account again.
 - **Force check** (the circular arrow in the top bar) runs a check now and restarts the interval
-  countdown, so it never adds a second check right after.
+  countdown. If a check is already running it waits for that one, so two checks never run back to
+  back.
 - If every account is at a limit, it picks the one that frees up first.
 - A swap writes the chosen account's login into Claude Code's files: `claudeAiOauth` in
   `.credentials.json` and `oauthAccount` in `.claude.json`. Every other key in both files is kept.

@@ -65,7 +65,7 @@ Each account has two usage windows, measured by Anthropic:
 
 An account counts as *limit reached* when either window is at or above its threshold (95 % and 98 % by default) and has not reset yet. Swapping a little before 100 % keeps a running prompt from hitting the hard limit.
 
-Every **check interval** (3 minutes by default) the engine reads usage for each account, refreshes the tokens of inactive accounts before they expire, and picks the active account again. Changing the order, enabling an account or clicking **Use now** runs a check right away. The **Force check** button (the circular arrow in the top bar) does the same on demand and restarts the interval countdown, so two checks never run back to back.
+Every **check interval** (3 minutes by default) the engine reads usage for each account, refreshes the tokens of inactive accounts before they expire, and picks the active account again. Changing the order, enabling an account or clicking **Use now** runs a check right away. The **Force check** button (the circular arrow in the top bar) does the same on demand and restarts the interval countdown. If a check is already running, it waits for that one instead of starting another, so two checks never run back to back.
 
 ## Settings
 

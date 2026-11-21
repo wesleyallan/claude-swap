@@ -73,7 +73,7 @@ El motor ejecuta un **tick** en cada intervalo de comprobación (3 minutos por d
 4. **Decide** — la función pura `selectActiveAccount` elige la cuenta que debe estar activa.
 5. **Cambia** — si no es la activa, vuelve a sincronizar los tokens activos, escribe el login de la cuenta elegida en los archivos de Claude Code y registra el cambio.
 
-Los ticks y las mutaciones de la API comparten un **mutex**, así que nunca se mezclan. Las llamadas a `runNow()` tienen **debounce** (250 ms), así que varios clics se convierten en un solo tick. Cada tick programa el siguiente un intervalo completo después: por eso **Forzar comprobación** reinicia la cuenta atrás en lugar de sumar una segunda comprobación justo después.
+Los ticks y las mutaciones de la API comparten un **mutex**, así que nunca se mezclan. Las llamadas a `runNow()` tienen **debounce** (250 ms), así que varios clics se convierten en un solo tick. Cada tick programa el siguiente un intervalo completo después, así que **Forzar comprobación** reinicia la cuenta atrás. Llama a `checkNow()`, que aprovecha un tick ya en curso en lugar de encolar un segundo justo detrás. Reordenar, Usar ahora y habilitar llaman a `runNow()`: necesitan un tick que empiece después del cambio.
 
 ## Integración con Claude Code
 
@@ -111,7 +111,7 @@ El historial está limitado **por tiempo, no por cantidad**: un punto por cuenta
 | `PATCH /api/accounts/:id` | Renombra, habilita o deshabilita |
 | `DELETE /api/accounts/:id` | Elimina una cuenta y sus tokens |
 | `GET`/`PATCH /api/preferences` | Lee o cambia la configuración |
-| `POST /api/engine/run` | Fuerza una comprobación; responde cuando termina |
+| `POST /api/engine/run` | Fuerza una comprobación (aprovecha una en curso); responde cuando termina |
 
 Las rutas son finas: validan la entrada con zod, llaman a un caso de uso y mapean el resultado a un DTO. Los mapeadores de DTO eligen cada campo explícitamente, así que los tokens nunca llegan al navegador (una prueba lo garantiza). Toda respuesta pasa por una **protección de Host/Origin** (contra DNS rebinding y CSRF), una Content-Security-Policy restringida al mismo origen y compresión **gzip**. El `index.html` recibe el tema y el idioma guardados, así la página nunca parpadea con el tema equivocado.
 

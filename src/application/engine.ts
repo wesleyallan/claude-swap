@@ -46,6 +46,7 @@ export interface EngineStatus {
 /** What use cases and the server need from the engine. */
 export interface EngineControl {
   runNow(options?: RunOptions): Promise<void>
+  checkNow(): Promise<void>
   status(): EngineStatus
 }
 
@@ -81,6 +82,7 @@ export class Engine implements EngineControl {
   #pendingRunTimer: ReturnType<typeof setTimeout> | undefined
   #settlePendingRun: (() => void) | undefined
   #pendingRunIsManual = false
+  #tickInFlight: Promise<void> | null = null
   #lastTickAt: Date | null = null
   #nextTickAt: Date | null = null
   #unknownLogin: string | null = null
@@ -120,6 +122,14 @@ export class Engine implements EngineControl {
     return this.#pendingRun
   }
 
+  /**
+   * "Force check": joins the tick already in flight, if any, instead of queueing a second one
+   * right behind it. Mutations use `runNow`: they need a tick that starts after their change.
+   */
+  checkNow(): Promise<void> {
+    return this.#tickInFlight ?? this.runNow()
+  }
+
   status(): EngineStatus {
     return {
       running: this.#running,
@@ -131,16 +141,23 @@ export class Engine implements EngineControl {
 
   /** One full cycle under the mutex. Never rejects; then schedules the next tick if running. */
   async tick(): Promise<void> {
-    const intervalSec = await this.#deps.mutex.run(() => {
-      // Cleared inside the mutex: a tick that ran while this one waited has scheduled a timer too.
-      clearTimeout(this.#nextTickTimer)
-      return this.#runTickSafely()
-    })
-    const delayMs = Math.min(intervalSec, MAX_POLL_INTERVAL_SEC) * 1000
-    this.#lastTickAt = this.#deps.clock.now()
-    if (this.#running) {
-      this.#nextTickAt = new Date(this.#lastTickAt.getTime() + delayMs)
-      this.#nextTickTimer = setTimeout(() => void this.tick(), delayMs)
+    const finished = Promise.withResolvers<void>()
+    try {
+      const intervalSec = await this.#deps.mutex.run(() => {
+        // Cleared inside the mutex: a tick that ran while this one waited has scheduled a timer too.
+        clearTimeout(this.#nextTickTimer)
+        this.#tickInFlight = finished.promise
+        return this.#runTickSafely()
+      })
+      const delayMs = Math.min(intervalSec, MAX_POLL_INTERVAL_SEC) * 1000
+      this.#lastTickAt = this.#deps.clock.now()
+      if (this.#running) {
+        this.#nextTickAt = new Date(this.#lastTickAt.getTime() + delayMs)
+        this.#nextTickTimer = setTimeout(() => void this.tick(), delayMs)
+      }
+    } finally {
+      if (this.#tickInFlight === finished.promise) this.#tickInFlight = null
+      finished.resolve()
     }
   }
 

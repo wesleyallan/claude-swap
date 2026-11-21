@@ -73,7 +73,7 @@ The engine runs one **tick** every poll interval (3 minutes by default). A tick 
 4. **Decide** — the pure `selectActiveAccount` function picks the account that should be active.
 5. **Swap** — if it is not the live one, re-sync the live tokens, write the target's login into Claude Code's files and record the swap.
 
-Ticks and API mutations share one **mutex**, so they never interleave. Calls to `runNow()` are **debounced** (250 ms), so a burst of clicks becomes one tick. Every tick reschedules the next one a full interval later: that is why **Force check** restarts the countdown instead of adding a second check right after.
+Ticks and API mutations share one **mutex**, so they never interleave. Calls to `runNow()` are **debounced** (250 ms), so a burst of clicks becomes one tick. Every tick reschedules the next one a full interval later, so **Force check** restarts the countdown. It calls `checkNow()`, which joins a tick already in flight instead of queueing a second one right behind it. Reorder, Use now and enable call `runNow()` instead: they need a tick that starts after their change.
 
 ## Claude Code integration
 
@@ -111,7 +111,7 @@ History is bounded **by time, not by count**: one point per account per 3 minute
 | `PATCH /api/accounts/:id` | Rename, enable or disable |
 | `DELETE /api/accounts/:id` | Remove an account and its tokens |
 | `GET`/`PATCH /api/preferences` | Read or change settings |
-| `POST /api/engine/run` | Force a check; answers when it is done |
+| `POST /api/engine/run` | Force a check (joins one already running); answers when it is done |
 
 Routes stay thin: validate the input with zod, call a use case, map the result to a DTO. The DTO mappers pick every field explicitly, so tokens can never reach the browser (a test asserts it). Every response goes through a **Host/Origin guard** (DNS rebinding and CSRF protection), a strict same-origin Content-Security-Policy and **gzip** compression. `index.html` is templated with the saved theme and language, so the page never flashes the wrong theme.
 

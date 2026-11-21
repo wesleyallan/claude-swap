@@ -103,6 +103,7 @@ describe('security middleware', () => {
     expect(res.status).toBe(403)
     expect(await res.json()).toEqual({ error: 'forbidden-origin' })
     expect(engine.runs).toEqual([])
+    expect(engine.checks).toBe(0)
   })
 
   it('rejects Origin: null and an allowed host with another port', async () => {
@@ -337,7 +338,8 @@ describe('api', () => {
     finishTick()
     const res = await pending
     expect(res.status).toBe(200)
-    expect(engine.runs).toEqual([{}])
+    expect(engine.checks).toBe(1) // force check: joins a running tick instead of queueing one
+    expect(engine.runs).toEqual([])
   })
 
   it('unknown /api route → JSON 404', async () => {

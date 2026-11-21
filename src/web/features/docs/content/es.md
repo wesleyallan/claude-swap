@@ -65,7 +65,7 @@ Cada cuenta tiene dos ventanas de uso, medidas por Anthropic:
 
 Una cuenta cuenta como *límite alcanzado* cuando cualquiera de las ventanas está en su umbral o por encima (95 % y 98 % por defecto) y aún no se reinició. Cambiar un poco antes del 100 % evita que un prompt en curso choque con el límite real.
 
-En cada **intervalo de verificación** (3 minutos por defecto) el motor lee el uso de cada cuenta, renueva los tokens de las cuentas inactivas antes de que caduquen y vuelve a elegir la cuenta activa. Cambiar el orden, habilitar una cuenta o hacer clic en **Usar ahora** ejecuta una verificación al instante. El botón **Forzar comprobación** (la flecha circular de la barra superior) hace lo mismo cuando quieras y reinicia la cuenta atrás del intervalo, así nunca se ejecutan dos verificaciones seguidas.
+En cada **intervalo de verificación** (3 minutos por defecto) el motor lee el uso de cada cuenta, renueva los tokens de las cuentas inactivas antes de que caduquen y vuelve a elegir la cuenta activa. Cambiar el orden, habilitar una cuenta o hacer clic en **Usar ahora** ejecuta una verificación al instante. El botón **Forzar comprobación** (la flecha circular de la barra superior) hace lo mismo cuando quieras y reinicia la cuenta atrás del intervalo. Si ya hay una verificación en curso, espera a esa en lugar de empezar otra, así nunca se ejecutan dos verificaciones seguidas.
 
 ## Configuración
 

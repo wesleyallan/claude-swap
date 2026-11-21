@@ -496,6 +496,41 @@ describe('Engine scheduling', () => {
     await s.engine.stop()
   })
 
+  it('checkNow joins a tick already in flight instead of polling again right after', async () => {
+    const s = setup(['a'], { pollIntervalSec: 60 })
+    const snapshot = s.usage('a', 10)
+    let releasePoll = () => {}
+    s.usageApi.byToken.set(
+      'fake-access-a',
+      () => new Promise((r) => (releasePoll = () => r(snapshot))) as never,
+    )
+    s.engine.start()
+    await vi.advanceTimersByTimeAsync(DEBOUNCE_MS) // a tick is in flight, blocked on its poll
+    let checked = false
+    const check = s.engine.checkNow().then(() => (checked = true))
+    await vi.advanceTimersByTimeAsync(DEBOUNCE_MS)
+    expect(checked).toBe(false) // waits for the running tick
+    releasePoll()
+    await check
+    expect(s.usageApi.calls).toHaveLength(1) // no second poll queued behind it
+    expect(s.engine.status().nextTickAt).toEqual(new Date(s.clock.now().getTime() + 60_000))
+    await vi.advanceTimersByTimeAsync(60_000 - 1)
+    expect(s.usageApi.calls).toHaveLength(1)
+    await vi.advanceTimersByTimeAsync(1)
+    expect(s.usageApi.calls).toHaveLength(2)
+    releasePoll()
+    await s.engine.stop()
+  })
+
+  it('checkNow runs a tick when none is in flight', async () => {
+    const s = setup(['a'])
+    const check = s.engine.checkNow()
+    await vi.advanceTimersByTimeAsync(DEBOUNCE_MS)
+    await check
+    expect(s.usageApi.calls).toHaveLength(1)
+    expect(s.engine.status().lastTickAt).toEqual(s.clock.now())
+  })
+
   it('runNow coalesces a burst into one tick', async () => {
     const s = setup(['a'])
     const p = Promise.all([s.engine.runNow(), s.engine.runNow(), s.engine.runNow()])

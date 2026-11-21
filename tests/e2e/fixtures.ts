@@ -193,9 +193,14 @@ export async function dashboard(request: import('@playwright/test').APIRequestCo
   return res.json()
 }
 
-/** Runs an engine tick now and waits for it (the engine also polls on its own interval). */
+/**
+ * Runs a fresh engine tick and waits for it. A force check joins a tick already in flight, which
+ * may have polled before the test changed the mock, so the second call is the fresh one.
+ */
 export async function runEngine(request: import('@playwright/test').APIRequestContext) {
-  expect((await request.post('/api/engine/run')).status()).toBe(200)
+  for (let call = 0; call < 2; call++) {
+    expect((await request.post('/api/engine/run')).status()).toBe(200)
+  }
 }
 
 /** Waits until Claude Code's credentials hold `account`'s access token. */

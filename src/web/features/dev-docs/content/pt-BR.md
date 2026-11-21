@@ -73,7 +73,7 @@ O motor roda um **tick** a cada intervalo de verificação (3 minutos por padrã
 4. **Decide** — a função pura `selectActiveAccount` escolhe a conta que deve ficar ativa.
 5. **Troca** — se não for a ativa, sincroniza os tokens ativos de novo, grava o login da conta escolhida nos arquivos do Claude Code e registra a troca.
 
-Ticks e mutações da API dividem um **mutex**, então nunca se misturam. Chamadas a `runNow()` têm **debounce** (250 ms), então vários cliques viram um tick só. Todo tick agenda o próximo um intervalo inteiro depois: é por isso que **Forçar verificação** reinicia a contagem em vez de somar uma segunda verificação logo em seguida.
+Ticks e mutações da API dividem um **mutex**, então nunca se misturam. Chamadas a `runNow()` têm **debounce** (250 ms), então vários cliques viram um tick só. Todo tick agenda o próximo um intervalo inteiro depois, então **Forçar verificação** reinicia a contagem. Ele chama `checkNow()`, que aproveita um tick já em andamento em vez de enfileirar um segundo logo atrás. Reordenar, Usar agora e habilitar chamam `runNow()`: precisam de um tick que comece depois da mudança.
 
 ## Integração com o Claude Code
 
@@ -111,7 +111,7 @@ O histórico é limitado **por tempo, não por quantidade**: um ponto por conta 
 | `PATCH /api/accounts/:id` | Renomeia, habilita ou desabilita |
 | `DELETE /api/accounts/:id` | Remove uma conta e seus tokens |
 | `GET`/`PATCH /api/preferences` | Lê ou altera as configurações |
-| `POST /api/engine/run` | Força uma verificação; responde quando ela termina |
+| `POST /api/engine/run` | Força uma verificação (aproveita uma já em andamento); responde quando ela termina |
 
 As rotas são finas: validam a entrada com zod, chamam um caso de uso e mapeiam o resultado para um DTO. Os mapeadores de DTO escolhem cada campo explicitamente, então tokens nunca chegam ao navegador (um teste garante isso). Toda resposta passa por uma **proteção de Host/Origin** (contra DNS rebinding e CSRF), uma Content-Security-Policy restrita à mesma origem e compressão **gzip**. O `index.html` recebe o tema e o idioma salvos, então a página nunca pisca no tema errado.
 
