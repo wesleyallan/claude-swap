@@ -13,7 +13,10 @@ export function redact(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(redact)
   if (value && typeof value === 'object') {
     return Object.fromEntries(
-      Object.entries(value).map(([k, v]) => [k, SECRET_KEY.test(k) ? MASK : redact(v)]),
+      Object.entries(value).map(([key, nested]) => [
+        key,
+        SECRET_KEY.test(key) ? MASK : redact(nested),
+      ]),
     )
   }
   return value
@@ -25,8 +28,8 @@ export interface LogSinks {
 }
 
 const stdio: LogSinks = {
-  out: (l) => process.stdout.write(l),
-  err: (l) => process.stderr.write(l),
+  out: (line) => process.stdout.write(line),
+  err: (line) => process.stderr.write(line),
 }
 
 /** One JSON object per line (journald-friendly). Never logs a token. */

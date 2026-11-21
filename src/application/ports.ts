@@ -83,7 +83,7 @@ export interface AppState {
   readonly lastActiveId: AccountId | null
 }
 
-/** `save` compacts history and activity (caps + downsampling) before writing. */
+/** `save` trims history (by age) and activity (last entries) before writing. */
 export interface StateRepository {
   load(): Promise<AppState>
   save(state: AppState): Promise<void>

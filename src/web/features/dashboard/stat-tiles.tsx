@@ -22,7 +22,7 @@ export function StatTiles({ data }: { data: Dashboard }) {
   const t = useTranslations('stats')
   const format = useFormatter()
   const now = useNow({ updateInterval: 30_000 })
-  const active = data.accounts.find((a) => a.id === data.activeId)
+  const active = data.accounts.find((account) => account.id === data.activeId)
   const reset = nextReset(data.accounts, data.usage, now)
   const swaps = swapsSince(data.activity, new Date(now.getTime() - DAY_MS))
   const mode = data.engine.unknownLogin ? 'Paused' : data.preferences.autoRotate ? 'Auto' : 'Manual'

@@ -1,4 +1,3 @@
-// Hono app: security middleware, JSON API under /api, static SPA with templated index.html.
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { serveStatic } from '@hono/node-server/serve-static'
@@ -52,57 +51,57 @@ const validate = <T extends z.ZodType, Target extends 'json' | 'param'>(
   target: Target,
   schema: T,
 ) =>
-  zValidator(target, schema, (result, c) => {
+  zValidator(target, schema, (result, ctx) => {
     if (!result.success) {
-      const issues = result.error.issues.map((i) => ({
-        path: i.path.join('.'),
-        message: i.message,
+      const issues = result.error.issues.map((issue) => ({
+        path: issue.path.join('.'),
+        message: issue.message,
       }))
-      return c.json({ error: 'validation' as const, issues }, 400)
+      return ctx.json({ error: 'validation' as const, issues }, 400)
     }
   })
 
-const ok = (c: Context) => c.json({ ok: true as const })
+const ok = (ctx: Context) => ctx.json({ ok: true as const })
 
 /** DNS rebinding: only `localhost:<port>` / `127.0.0.1:<port>`. CSRF: a present Origin must be same-origin. */
-function guard(port: number): MiddlewareHandler {
-  const hosts = new Set([`localhost:${port}`, `127.0.0.1:${port}`])
-  return async (c, next) => {
+function hostAndOriginGuard(port: number): MiddlewareHandler {
+  const allowedHosts = new Set([`localhost:${port}`, `127.0.0.1:${port}`])
+  return async (ctx, next) => {
     // node-server builds the URL from the Host header; app.request() from the given URL.
-    const host = new URL(c.req.url).host
-    if (!hosts.has(host)) return c.json({ error: 'forbidden-host' }, 403)
-    const origin = c.req.header('origin')
-    const safe = ['GET', 'HEAD', 'OPTIONS'].includes(c.req.method)
-    if (!safe && origin !== undefined && origin !== `http://${host}`) {
-      return c.json({ error: 'forbidden-origin' }, 403)
+    const host = new URL(ctx.req.url).host
+    if (!allowedHosts.has(host)) return ctx.json({ error: 'forbidden-host' }, 403)
+    const origin = ctx.req.header('origin')
+    const isReadOnly = ['GET', 'HEAD', 'OPTIONS'].includes(ctx.req.method)
+    if (!isReadOnly && origin !== undefined && origin !== `http://${host}`) {
+      return ctx.json({ error: 'forbidden-origin' }, 403)
     }
     await next()
   }
 }
 
 /** serveStatic + Cache-Control on hits (`onFound` sets it before the response exists, so it is lost). */
-function files(root: string, cacheControl: string): MiddlewareHandler {
+function staticFiles(root: string, cacheControl: string): MiddlewareHandler {
   const serve = serveStatic({ root })
   return async (ctx, next) => {
-    const res = await serve(ctx, next)
+    const response = await serve(ctx, next)
     // On a miss serveStatic returns whatever `next()` resolved to, which is not a Response.
-    if (!(res instanceof Response)) return
-    res.headers.set('Cache-Control', cacheControl)
-    return res
+    if (!(response instanceof Response)) return
+    response.headers.set('Cache-Control', cacheControl)
+    return response
   }
 }
 
-export function createApp(c: Container) {
+export function createApp(container: Container) {
   const api = new Hono()
     .get('/health', (ctx) => ctx.json({ status: 'ok' as const }))
-    .get('/dashboard', async (ctx) => ctx.json(toDashboardDto(await getDashboard(c))))
-    .get('/history', async (ctx) => ctx.json(toHistoryDto(await getHistory(c))))
-    .get('/accounts/current', async (ctx) => ctx.json({ login: await getCurrentLogin(c) }))
+    .get('/dashboard', async (ctx) => ctx.json(toDashboardDto(await getDashboard(container))))
+    .get('/history', async (ctx) => ctx.json(toHistoryDto(await getHistory(container))))
+    .get('/accounts/current', async (ctx) => ctx.json({ login: await getCurrentLogin(container) }))
     .post('/accounts/import', validate('json', importBody), async (ctx) =>
-      ctx.json(toAccountDto(await importCurrentLogin(c, ctx.req.valid('json'))), 201),
+      ctx.json(toAccountDto(await importCurrentLogin(container, ctx.req.valid('json'))), 201),
     )
     .put('/accounts/order', validate('json', orderBody), async (ctx) => {
-      await reorderAccounts(c, ctx.req.valid('json').ids)
+      await reorderAccounts(container, ctx.req.valid('json').ids)
       return ok(ctx)
     })
     .patch(
@@ -112,32 +111,32 @@ export function createApp(c: Container) {
       async (ctx) => {
         const { id } = ctx.req.valid('param')
         const { label, enabled } = ctx.req.valid('json')
-        if (label !== undefined) await renameAccount(c, id, label)
-        if (enabled !== undefined) await setAccountEnabled(c, id, enabled)
+        if (label !== undefined) await renameAccount(container, id, label)
+        if (enabled !== undefined) await setAccountEnabled(container, id, enabled)
         return ok(ctx)
       },
     )
     .delete('/accounts/:id', validate('param', idParam), async (ctx) => {
-      await removeAccount(c, ctx.req.valid('param').id)
+      await removeAccount(container, ctx.req.valid('param').id)
       return ok(ctx)
     })
     .post('/accounts/:id/promote', validate('param', idParam), async (ctx) => {
-      await promoteAccount(c, ctx.req.valid('param').id)
+      await promoteAccount(container, ctx.req.valid('param').id)
       return ok(ctx)
     })
-    .get('/preferences', async (ctx) => ctx.json((await c.config.load()).preferences))
+    .get('/preferences', async (ctx) => ctx.json((await container.config.load()).preferences))
     .patch('/preferences', validate('json', preferencesPatch), async (ctx) =>
       // zod's partial output has `key?: T | undefined`; the use case wants exact optionals.
-      ctx.json(await updatePreferences(c, ctx.req.valid('json') as Partial<Preferences>)),
+      ctx.json(await updatePreferences(container, ctx.req.valid('json') as Partial<Preferences>)),
     )
     .post('/engine/run', async (ctx) => {
-      await c.engine.runNow()
+      await container.engine.runNow()
       return ok(ctx)
     })
 
   const app = new Hono()
   app.use(
-    guard(c.port),
+    hostAndOriginGuard(container.port),
     compress(),
     secureHeaders({
       // Everything is same-origin; Base UI/Recharts set inline `style` attributes (and shadcn's
@@ -165,33 +164,33 @@ export function createApp(c: Container) {
     if (err instanceof HTTPException && err.status < 500) {
       return ctx.json({ error: 'bad-request' }, err.status)
     }
-    c.logger.error('request failed', { method: ctx.req.method, path: ctx.req.path, err })
+    container.logger.error('request failed', { method: ctx.req.method, path: ctx.req.path, err })
     return ctx.json({ error: 'internal' }, 500)
   })
   const routes = app.route('/api', api)
   app.all('/api/*', (ctx) => ctx.json({ error: 'not-found' }, 404))
 
   // Vite emits content-hashed files under assets/: cache them forever; a miss is a real 404.
-  app.use('/assets/*', files(c.webRoot, 'public, max-age=31536000, immutable'))
+  app.use('/assets/*', staticFiles(container.webRoot, 'public, max-age=31536000, immutable'))
   app.get('/assets/*', (ctx) => ctx.text('Not found', 404))
 
-  const spa = async (ctx: Context) => {
+  const serveSpa = async (ctx: Context) => {
     let html: string
     try {
-      html = await readFile(join(c.webRoot, 'index.html'), 'utf8')
+      html = await readFile(join(container.webRoot, 'index.html'), 'utf8')
     } catch {
       return ctx.text('UI not built: run `npm run build`', 503)
     }
-    const { theme, locale } = (await c.config.load()).preferences
+    const { theme, locale } = (await container.config.load()).preferences
     // `theme: system` gets no class (CSS follows prefers-color-scheme); both are validated enums.
-    const tag = `<html lang="${locale}"${theme === 'system' ? '' : ` class="${theme}"`}>`
+    const htmlTag = `<html lang="${locale}"${theme === 'system' ? '' : ` class="${theme}"`}>`
     ctx.header('Cache-Control', 'no-cache')
-    return ctx.html(html.replace(/<html[^>]*>/i, tag))
+    return ctx.html(html.replace(/<html[^>]*>/i, htmlTag))
   }
-  app.get('/', spa)
-  app.get('/index.html', spa)
-  app.use('*', files(c.webRoot, 'no-cache'))
-  app.get('*', spa)
+  app.get('/', serveSpa)
+  app.get('/index.html', serveSpa)
+  app.use('*', staticFiles(container.webRoot, 'no-cache'))
+  app.get('*', serveSpa)
 
   return routes
 }

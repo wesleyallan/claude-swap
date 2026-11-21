@@ -75,7 +75,7 @@ function parseKey<S extends z.ZodType>(path: string, doc: Doc | null, key: strin
   if (doc?.[key] == null) return null // missing or null: logged out
   const result = schema.safeParse(doc[key])
   if (!result.success) {
-    const fields = result.error.issues.map((i) => [key, ...i.path].join('.'))
+    const fields = result.error.issues.map((issue) => [key, ...issue.path].join('.'))
     throw new ClaudeCodeFileError(path, `invalid ${[...new Set(fields)].join(', ')}`)
   }
   return result.data as z.output<S>
@@ -83,46 +83,52 @@ function parseKey<S extends z.ZodType>(path: string, doc: Doc | null, key: strin
 
 /** Linux file-based Claude Code login: `.credentials.json` → `claudeAiOauth`, `.claude.json` → `oauthAccount`. */
 export class FileClaudeCodeSession implements ClaudeCodeSession {
-  readonly #d: ClaudeCodeSessionDeps
+  readonly #deps: ClaudeCodeSessionDeps
   readonly #mutex = new PromiseMutex()
 
   constructor(deps: ClaudeCodeSessionDeps) {
-    this.#d = deps
+    this.#deps = deps
   }
 
   async readCurrentLogin(): Promise<ClaudeCodeLogin | null> {
-    const { credentials, claudeJson } = this.#d
-    const [creds, cj] = await Promise.all([readDoc(credentials), readDoc(claudeJson)])
-    const oauth = parseKey(credentials, creds, 'claudeAiOauth', oauthTokensSchema)
-    const account = parseKey(claudeJson, cj, 'oauthAccount', oauthAccountSchema)
+    const { credentials, claudeJson } = this.#deps
+    const [credentialsDoc, claudeJsonDoc] = await Promise.all([
+      readDoc(credentials),
+      readDoc(claudeJson),
+    ])
+    const oauth = parseKey(credentials, credentialsDoc, 'claudeAiOauth', oauthTokensSchema)
+    const account = parseKey(claudeJson, claudeJsonDoc, 'oauthAccount', oauthAccountSchema)
     return oauth && account ? { oauth, account } : null
   }
 
   writeLogin(oauth: OAuthTokens, account: OAuthAccount): Promise<void> {
     return this.#mutex.run(async () => {
-      const { credentials, claudeJson } = this.#d
+      const { credentials, claudeJson } = this.#deps
       // Read (and validate) both before touching anything: a malformed file is never overwritten.
-      const [creds, cj] = await Promise.all([readDoc(credentials), readDoc(claudeJson)])
+      const [credentialsDoc, claudeJsonDoc] = await Promise.all([
+        readDoc(credentials),
+        readDoc(claudeJson),
+      ])
       await this.#backupOnce()
-      await writeDoc(credentials, { ...creds, claudeAiOauth: oauth })
-      await writeDoc(claudeJson, { ...cj, oauthAccount: account })
+      await writeDoc(credentials, { ...credentialsDoc, claudeAiOauth: oauth })
+      await writeDoc(claudeJson, { ...claudeJsonDoc, oauthAccount: account })
     })
   }
 
   /** First write ever (no backups yet) → copy both originals to `backups/<ts>/`, 0600. */
   async #backupOnce(): Promise<void> {
-    const { backups, clock, credentials, claudeJson } = this.#d
-    const existing = await readdir(backups).catch((err: unknown) => {
+    const { backups, clock, credentials, claudeJson } = this.#deps
+    const existingBackups = await readdir(backups).catch((err: unknown) => {
       if (isMissing(err)) return []
       throw err
     })
-    if (existing.length > 0) return
-    const dest = join(backups, clock.now().toISOString().replace(/[:.]/g, '-'))
-    await mkdir(dest, { recursive: true, mode: 0o700 })
-    for (const src of [credentials, claudeJson]) {
+    if (existingBackups.length > 0) return
+    const backupDir = join(backups, clock.now().toISOString().replace(/[:.]/g, '-'))
+    await mkdir(backupDir, { recursive: true, mode: 0o700 })
+    for (const original of [credentials, claudeJson]) {
       try {
-        const data = await readFile(src, 'utf8')
-        await atomicWrite(join(dest, basename(src)), data)
+        const data = await readFile(original, 'utf8')
+        await atomicWrite(join(backupDir, basename(original)), data)
       } catch (err) {
         if (!isMissing(err)) throw err
       }

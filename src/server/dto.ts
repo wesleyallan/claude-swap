@@ -4,51 +4,62 @@ import type { ActivityEntry, HistoryPoint, StoredAccount } from '@/application/p
 import type { Dashboard } from '@/application/use-cases'
 import type { UsageSnapshot, UsageWindow } from '@/domain/usage'
 
-const iso = (d: Date | null) => (d ? d.toISOString() : null)
+const toIsoOrNull = (date: Date | null) => (date ? date.toISOString() : null)
 
-export const toAccountDto = (a: StoredAccount) => ({
-  id: a.id,
-  label: a.label,
-  email: a.email,
-  organizationName: a.organizationName,
-  subscriptionType: a.subscriptionType,
-  enabled: a.enabled,
-  needsReauth: a.needsReauth,
-  addedAt: a.addedAt.toISOString(),
+export const toAccountDto = (account: StoredAccount) => ({
+  id: account.id,
+  label: account.label,
+  email: account.email,
+  organizationName: account.organizationName,
+  subscriptionType: account.subscriptionType,
+  enabled: account.enabled,
+  needsReauth: account.needsReauth,
+  addedAt: account.addedAt.toISOString(),
 })
 
-const toWindowDto = (w: UsageWindow | null) =>
-  w && { utilization: w.utilization, resetsAt: iso(w.resetsAt) }
+const toWindowDto = (window: UsageWindow | null) =>
+  window && { utilization: window.utilization, resetsAt: toIsoOrNull(window.resetsAt) }
 
-const toUsageDto = (s: UsageSnapshot) => ({
-  fiveHour: toWindowDto(s.fiveHour),
-  sevenDay: toWindowDto(s.sevenDay),
-  fetchedAt: s.fetchedAt.toISOString(),
-  ...(s.error !== undefined && { error: s.error }),
+const toUsageDto = (snapshot: UsageSnapshot) => ({
+  fiveHour: toWindowDto(snapshot.fiveHour),
+  sevenDay: toWindowDto(snapshot.sevenDay),
+  fetchedAt: snapshot.fetchedAt.toISOString(),
+  ...(snapshot.error !== undefined && { error: snapshot.error }),
 })
 
-const toActivityDto = (e: ActivityEntry) =>
-  e.type === 'swap'
-    ? { t: e.t.toISOString(), type: e.type, from: e.from, to: e.to, reason: e.reason }
+const toActivityDto = (entry: ActivityEntry) =>
+  entry.type === 'swap'
+    ? {
+        t: entry.t.toISOString(),
+        type: entry.type,
+        from: entry.from,
+        to: entry.to,
+        reason: entry.reason,
+      }
     : {
-        t: e.t.toISOString(),
-        type: e.type,
-        ...(e.accountId !== undefined && { accountId: e.accountId }),
-        ...(e.message !== undefined && { message: e.message }),
+        t: entry.t.toISOString(),
+        type: entry.type,
+        ...(entry.accountId !== undefined && { accountId: entry.accountId }),
+        ...(entry.message !== undefined && { message: entry.message }),
       }
 
-export const toDashboardDto = (d: Dashboard) => ({
-  preferences: d.preferences,
-  accounts: d.accounts.map((a) => ({ ...toAccountDto(a), status: d.statuses[a.id] ?? 'unknown' })),
-  usage: Object.fromEntries(Object.entries(d.usage).map(([id, s]) => [id, toUsageDto(s)])),
-  activity: d.activity.map(toActivityDto),
-  activeId: d.activeId,
+export const toDashboardDto = (dashboard: Dashboard) => ({
+  preferences: dashboard.preferences,
+  accounts: dashboard.accounts.map((account) => ({
+    ...toAccountDto(account),
+    status: dashboard.statuses[account.id] ?? 'unknown',
+  })),
+  usage: Object.fromEntries(
+    Object.entries(dashboard.usage).map(([id, snapshot]) => [id, toUsageDto(snapshot)]),
+  ),
+  activity: dashboard.activity.map(toActivityDto),
+  activeId: dashboard.activeId,
   engine: {
-    running: d.engine.running,
-    lastTickAt: iso(d.engine.lastTickAt),
-    nextTickAt: iso(d.engine.nextTickAt),
+    running: dashboard.engine.running,
+    lastTickAt: toIsoOrNull(dashboard.engine.lastTickAt),
+    nextTickAt: toIsoOrNull(dashboard.engine.nextTickAt),
     /** Email of a Claude Code login that is not imported; the engine does not swap while set. */
-    unknownLogin: d.engine.unknownLogin,
+    unknownLogin: dashboard.engine.unknownLogin,
   },
 })
 

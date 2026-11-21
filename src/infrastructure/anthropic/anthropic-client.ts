@@ -75,21 +75,21 @@ export class AnthropicClient implements UsageApi, TokenRefresher {
         client_id: CLAUDE_CODE_CLIENT_ID,
       }),
     })
-    const t = parse(tokenSchema, body)
+    const token = parse(tokenSchema, body)
     return {
       ...previous,
-      accessToken: t.access_token,
-      refreshToken: t.refresh_token ?? previous.refreshToken,
-      expiresAt: this.deps.clock.now().getTime() + t.expires_in * 1000,
-      ...(t.scope ? { scopes: t.scope.split(' ').filter(Boolean) } : {}),
+      accessToken: token.access_token,
+      refreshToken: token.refresh_token ?? previous.refreshToken,
+      expiresAt: this.deps.clock.now().getTime() + token.expires_in * 1000,
+      ...(token.scope ? { scopes: token.scope.split(' ').filter(Boolean) } : {}),
     }
   }
 
   /** Parsed JSON of a 2xx response; every other outcome becomes a typed error without secrets. */
   private async send(url: string, init: RequestInit & { headers: Record<string, string> }) {
-    let res: Response
+    let response: Response
     try {
-      res = await fetch(url, {
+      response = await fetch(url, {
         ...init,
         headers: { ...init.headers, 'user-agent': USER_AGENT },
         signal: AbortSignal.timeout(TIMEOUT_MS),
@@ -99,35 +99,41 @@ export class AnthropicClient implements UsageApi, TokenRefresher {
       throw new NetworkError(err instanceof Error ? err.name : 'unknown')
     }
     // Unread bodies keep undici's connection busy until GC: release them before throwing.
-    if (res.status === 401 || res.status === 429) await res.body?.cancel().catch(() => {})
-    if (res.status === 401) throw new UnauthorizedError()
-    if (res.status === 429) {
-      throw new RateLimitedError(retryAfterSeconds(res.headers.get('retry-after'), this.deps.clock))
+    if (response.status === 401 || response.status === 429)
+      await response.body?.cancel().catch(() => {})
+    if (response.status === 401) throw new UnauthorizedError()
+    if (response.status === 429) {
+      throw new RateLimitedError(
+        retryAfterSeconds(response.headers.get('retry-after'), this.deps.clock),
+      )
     }
-    const json: unknown = await res.json().catch(() => undefined)
-    if (res.ok) {
-      if (json === undefined) throw new BadResponseError(res.status, 'invalid JSON')
+    const json: unknown = await response.json().catch(() => undefined)
+    if (response.ok) {
+      if (json === undefined) throw new BadResponseError(response.status, 'invalid JSON')
       return json
     }
-    if (res.status === 400 && errorBodySchema.safeParse(json).data?.error === 'invalid_grant') {
+    if (
+      response.status === 400 &&
+      errorBodySchema.safeParse(json).data?.error === 'invalid_grant'
+    ) {
       throw new InvalidGrantError()
     }
-    throw new BadResponseError(res.status, `HTTP ${res.status}`)
+    throw new BadResponseError(response.status, `HTTP ${response.status}`)
   }
 }
 
 function parse<S extends z.ZodType>(schema: S, body: unknown): z.output<S> {
-  const r = schema.safeParse(body)
-  if (r.success) return r.data
+  const result = schema.safeParse(body)
+  if (result.success) return result.data
   // Field paths only: zod messages may quote received values, which can be tokens.
-  const paths = [...new Set(r.error.issues.map((i) => i.path.join('.') || '(root)'))]
+  const paths = [...new Set(result.error.issues.map((issue) => issue.path.join('.') || '(root)'))]
   throw new BadResponseError(200, `unexpected shape at ${paths.join(', ')}`)
 }
 
 function toWindow(
-  w: { utilization: number; resets_at: Date | null } | null | undefined,
+  window: { utilization: number; resets_at: Date | null } | null | undefined,
 ): UsageWindow | null {
-  return w ? { utilization: w.utilization, resetsAt: w.resets_at } : null
+  return window ? { utilization: window.utilization, resetsAt: window.resets_at } : null
 }
 
 /** `Retry-After` is either delta-seconds or an HTTP date (RFC 9110). */

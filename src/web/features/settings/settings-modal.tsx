@@ -56,16 +56,16 @@ function SettingsFormView({ preferences }: { preferences: Preferences }) {
   const [form, setForm] = useState<SettingsForm>(() => toForm(preferences))
   const [errors, setErrors] = useState<SettingsErrors>({})
   const id = useId()
-  const set = (patch: Partial<SettingsForm>) => setForm((f) => ({ ...f, ...patch }))
+  const set = (patch: Partial<SettingsForm>) => setForm((current) => ({ ...current, ...patch }))
 
-  const submit = (e: FormEvent) => {
-    e.preventDefault()
+  const submit = (event: FormEvent) => {
+    event.preventDefault()
     const result = parseSettings(preferences, form)
     if (!result.ok) {
       setErrors(result.errors)
       // Move focus to the first invalid field so keyboard and screen reader users land on it.
       const first = (['fiveHour', 'sevenDay', 'pollIntervalSec'] as const).find(
-        (k) => result.errors[k],
+        (field) => result.errors[field],
       )
       document.getElementById(`${id}-${first}`)?.focus()
       return
@@ -87,8 +87,8 @@ function SettingsFormView({ preferences }: { preferences: Preferences }) {
         value={form[key]}
         aria-invalid={errors[key]}
         aria-describedby={errors[key] ? `${id}-${key}-error` : hintId}
-        onChange={(e) => {
-          set({ [key]: e.target.value })
+        onChange={(event) => {
+          set({ [key]: event.target.value })
           setErrors(({ [key]: _, ...rest }) => rest)
         }}
       />

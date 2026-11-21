@@ -79,25 +79,27 @@ export function usePreferences() {
 }
 
 /**
- * A mutation that applies `optimistic` to the cached dashboard at once, rolls it back and shows
+ * A mutation that applies `applyOptimistically` to the cached dashboard at once, rolls it back and shows
  * an error toast when the request fails, and refetches once it settles either way.
  */
 function useDashboardMutation<V>(
   mutationFn: (vars: V) => Promise<unknown>,
-  optimistic: (d: Dashboard, vars: V) => Dashboard,
+  applyOptimistically: (dashboard: Dashboard, variables: V) => Dashboard,
 ) {
   const client = useQueryClient()
   const t = useTranslations('errors')
   return useMutation({
     mutationFn,
-    onMutate: async (vars: V) => {
+    onMutate: async (variables: V) => {
       await client.cancelQueries({ queryKey: dashboardKey })
       const previous = client.getQueryData<Dashboard>(dashboardKey)
-      if (previous) client.setQueryData<Dashboard>(dashboardKey, optimistic(previous, vars))
+      if (previous) {
+        client.setQueryData<Dashboard>(dashboardKey, applyOptimistically(previous, variables))
+      }
       return { previous }
     },
-    onError: (_err, _vars, result) => {
-      client.setQueryData(dashboardKey, result?.previous)
+    onError: (_error, _variables, context) => {
+      client.setQueryData(dashboardKey, context?.previous)
       toast.add({ title: t('saveFailed'), description: t('rolledBack'), type: 'error' })
     },
     onSettled: () => client.invalidateQueries({ queryKey: dashboardKey }),
@@ -105,48 +107,50 @@ function useDashboardMutation<V>(
 }
 
 /** Accounts in the order of `ids` (ids missing from the cache are ignored). */
-const ordered = (d: Dashboard, ids: readonly string[]): Dashboard => ({
-  ...d,
-  accounts: ids.flatMap((id) => d.accounts.find((a) => a.id === id) ?? []),
+const inOrder = (dashboard: Dashboard, ids: readonly string[]): Dashboard => ({
+  ...dashboard,
+  accounts: ids.flatMap((id) => dashboard.accounts.find((account) => account.id === id) ?? []),
 })
 
 export const useUpdatePreferences = () =>
-  useDashboardMutation(patchPreferences, (d, patch) => ({
-    ...d,
-    preferences: { ...d.preferences, ...patch } as Preferences,
+  useDashboardMutation(patchPreferences, (dashboard, patch) => ({
+    ...dashboard,
+    preferences: { ...dashboard.preferences, ...patch } as Preferences,
   }))
 
-export const useReorderAccounts = () => useDashboardMutation(putOrder, ordered)
+export const useReorderAccounts = () => useDashboardMutation(putOrder, inOrder)
 
 /**
  * "Use now": moves the account to the top. The request returns after the engine swapped, so a
  * healthy account is shown active at once to hide that wait.
  */
 export const usePromoteAccount = () =>
-  useDashboardMutation(promoteAccount, (d, id) => {
-    const next = ordered(d, [id, ...d.accounts.map((a) => a.id).filter((x) => x !== id)])
-    const healthy = d.accounts.find((a) => a.id === id)?.status === 'ok'
+  useDashboardMutation(promoteAccount, (dashboard, id) => {
+    const otherIds = dashboard.accounts.map((account) => account.id).filter((other) => other !== id)
+    const promoted = inOrder(dashboard, [id, ...otherIds])
+    const healthy = dashboard.accounts.find((account) => account.id === id)?.status === 'ok'
     // A paused engine (unknown login) will not swap.
-    return healthy && !d.engine.unknownLogin ? { ...next, activeId: id } : next
+    return healthy && !dashboard.engine.unknownLogin ? { ...promoted, activeId: id } : promoted
   })
 
 export const useSetAccountEnabled = () =>
-  useDashboardMutation(setAccountEnabled, (d, { id, enabled }) => ({
-    ...d,
-    accounts: d.accounts.map((a) => (a.id === id ? { ...a, enabled } : a)),
+  useDashboardMutation(setAccountEnabled, (dashboard, { id, enabled }) => ({
+    ...dashboard,
+    accounts: dashboard.accounts.map((account) =>
+      account.id === id ? { ...account, enabled } : account,
+    ),
   }))
 
 export const useRemoveAccount = () =>
-  useDashboardMutation(removeAccount, (d, id) => ({
-    ...d,
-    accounts: d.accounts.filter((a) => a.id !== id),
+  useDashboardMutation(removeAccount, (dashboard, id) => ({
+    ...dashboard,
+    accounts: dashboard.accounts.filter((account) => account.id !== id),
   }))
 
 /** Who Claude Code is logged in as; polled fast while the "Add account" modal is open. */
 export const useCurrentLogin = () =>
   useQuery({ queryKey: ['current-login'], queryFn: fetchCurrentLogin, refetchInterval: 3000 })
 
-/** Imports the login Claude Code is using right now, with an optional label. */
 export function useImportCurrentLogin() {
   const client = useQueryClient()
   const t = useTranslations('errors')

@@ -78,7 +78,7 @@ function useDocumentTitle(app: string) {
   const { data } = useDashboard()
   const active = data?.engine.unknownLogin
     ? undefined
-    : data?.accounts.find((a) => a.id === data.activeId)?.label
+    : data?.accounts.find((account) => account.id === data.activeId)?.label
   useEffect(() => {
     document.title = active ? `${active} - ${app}` : app
   }, [active, app])

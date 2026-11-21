@@ -33,9 +33,9 @@ export function selectActiveAccount(input: SelectionInput): Selection | null {
   if (!first) return null
   if (!autoRotate) return { id: first.id, reason: 'manual' }
 
-  const available = candidates.find((a) => !isExhausted(usage[a.id], thresholds, now))
+  const available = candidates.find((account) => !isExhausted(usage[account.id], thresholds, now))
   if (!available) {
-    const current = candidates.find((a) => a.id === currentId)
+    const current = candidates.find((account) => account.id === currentId)
     return { id: (current ?? earliestToRecover(candidates, input)).id, reason: 'all-exhausted' }
   }
   return { id: available.id, reason: reasonFor(available, first, input) }
@@ -43,16 +43,18 @@ export function selectActiveAccount(input: SelectionInput): Selection | null {
 
 /** Candidate whose blocking windows all reset first; ties keep priority order. */
 function earliestToRecover(candidates: readonly Account[], input: SelectionInput): Account {
-  const until = (a: Account) =>
-    Number(exhaustedUntil(input.usage[a.id], input.thresholds, input.now))
-  return candidates.reduce((best, a) => (until(a) < until(best) ? a : best))
+  const blockedUntil = (account: Account) =>
+    Number(exhaustedUntil(input.usage[account.id], input.thresholds, input.now))
+  return candidates.reduce((best, account) =>
+    blockedUntil(account) < blockedUntil(best) ? account : best,
+  )
 }
 
 function reasonFor(chosen: Account, first: Account, input: SelectionInput): SelectionReason {
-  const chosenIdx = input.accounts.indexOf(chosen)
-  const currentIdx = input.accounts.findIndex((a) => a.id === input.currentId)
-  if (currentIdx === -1 || currentIdx === chosenIdx) {
+  const chosenIndex = input.accounts.indexOf(chosen)
+  const currentIndex = input.accounts.findIndex((account) => account.id === input.currentId)
+  if (currentIndex === -1 || currentIndex === chosenIndex) {
     return chosen === first ? 'top-priority' : 'auto-exhausted'
   }
-  return chosenIdx < currentIdx ? 'auto-reset' : 'auto-exhausted'
+  return chosenIndex < currentIndex ? 'auto-reset' : 'auto-exhausted'
 }

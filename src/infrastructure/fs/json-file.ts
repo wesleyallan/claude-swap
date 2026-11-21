@@ -25,15 +25,15 @@ const isMissing = (err: unknown) => (err as NodeJS.ErrnoException).code === 'ENO
  * Writes are atomic and serialized per instance.
  */
 export class JsonFile<S extends z.ZodType> {
-  readonly #o: JsonFileOptions<S>
+  readonly #options: JsonFileOptions<S>
   readonly #mutex = new PromiseMutex()
 
   constructor(options: JsonFileOptions<S>) {
-    this.#o = options
+    this.#options = options
   }
 
   async read(): Promise<z.output<S>> {
-    const { path, schema, version, migrations = {}, defaults } = this.#o
+    const { path, schema, version, migrations = {}, defaults } = this.#options
     let text: string
     try {
       text = await readFile(path, 'utf8')
@@ -63,13 +63,13 @@ export class JsonFile<S extends z.ZodType> {
   }
 
   async #write(value: z.output<S>): Promise<void> {
-    const { path, schema, version, mode } = this.#o
+    const { path, schema, version, mode } = this.#options
     const body = { version, ...(schema.encode(value) as object) }
     await atomicWrite(path, `${JSON.stringify(body, null, 2)}\n`, mode ? { mode } : {})
   }
 
   async #moveAside(cause: unknown): Promise<void> {
-    const { path, clock, logger } = this.#o
+    const { path, clock, logger } = this.#options
     const backup = `${path}.corrupt-${clock.now().toISOString().replace(/[:.]/g, '-')}`
     try {
       await rename(path, backup)

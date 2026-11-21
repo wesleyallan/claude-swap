@@ -1,7 +1,6 @@
 import { hc, parseResponse } from 'hono/client'
 import type { AppType } from '@/server/app'
 
-/** Typed client for the local API (same origin). */
 const api = hc<AppType>('/').api
 
 export type Preferences = Awaited<ReturnType<typeof fetchDashboard>>['preferences']

@@ -1,5 +1,4 @@
-// Use cases: plain functions over a `deps` object. Mutations run under the shared mutex (so they
-// never interleave with an engine tick) and then poke the engine without awaiting the tick.
+// Mutations run under the shared mutex so they never interleave with an engine tick.
 import { type AccountId, type AccountStatus, accountStatus } from '@/domain/account'
 import { AccountNotFoundError } from '@/domain/errors'
 import { applyOrder, promoteAccount as promote } from '@/domain/ordering'
@@ -36,26 +35,29 @@ export class NotLoggedInError extends Error {
   }
 }
 
-const str = (v: unknown): string | null => (typeof v === 'string' && v ? v : null)
+const nonEmptyString = (value: unknown): string | null =>
+  typeof value === 'string' && value ? value : null
 
-async function appendActivity(d: UseCaseDeps, entry: ActivityEntry): Promise<void> {
-  const s = await d.state.load()
-  await d.state.save({ ...s, activity: [...s.activity, entry] })
+async function appendActivity(deps: UseCaseDeps, entry: ActivityEntry): Promise<void> {
+  const state = await deps.state.load()
+  await deps.state.save({ ...state, activity: [...state.activity, entry] })
 }
 
-/** Loads the accounts, applies `fn`, saves. Throws `AccountNotFoundError` for an unknown `id`. */
+/** Loads the accounts, applies `change`, saves. Throws `AccountNotFoundError` for an unknown `id`. */
 async function updateAccounts(
-  d: UseCaseDeps,
+  deps: UseCaseDeps,
   id: AccountId,
-  fn: (accounts: readonly StoredAccount[]) => StoredAccount[],
+  change: (accounts: readonly StoredAccount[]) => StoredAccount[],
 ): Promise<void> {
-  const config = await d.config.load()
-  if (!config.accounts.some((a) => a.id === id)) throw new AccountNotFoundError(id)
-  await d.config.save({ ...config, accounts: fn(config.accounts) })
+  const config = await deps.config.load()
+  if (!config.accounts.some((account) => account.id === id)) throw new AccountNotFoundError(id)
+  await deps.config.save({ ...config, accounts: change(config.accounts) })
 }
 
-const patchAccount = (d: UseCaseDeps, id: AccountId, patch: Partial<StoredAccount>) =>
-  updateAccounts(d, id, (list) => list.map((a) => (a.id === id ? { ...a, ...patch } : a)))
+const patchAccount = (deps: UseCaseDeps, id: AccountId, patch: Partial<StoredAccount>) =>
+  updateAccounts(deps, id, (accounts) =>
+    accounts.map((account) => (account.id === id ? { ...account, ...patch } : account)),
+  )
 
 export interface CurrentLogin {
   readonly id: AccountId
@@ -65,11 +67,11 @@ export interface CurrentLogin {
 }
 
 /** Who Claude Code is logged in as right now (`null` when it is not), for the "Add account" modal. */
-export async function getCurrentLogin(d: UseCaseDeps): Promise<CurrentLogin | null> {
-  const login = await d.session.readCurrentLogin()
+export async function getCurrentLogin(deps: UseCaseDeps): Promise<CurrentLogin | null> {
+  const login = await deps.session.readCurrentLogin()
   if (!login) return null
   const { accountUuid: id, emailAddress: email } = login.account
-  const known = (await d.config.load()).accounts.some((a) => a.id === id)
+  const known = (await deps.config.load()).accounts.some((account) => account.id === id)
   return { id, email, known }
 }
 
@@ -79,20 +81,20 @@ export async function getCurrentLogin(d: UseCaseDeps): Promise<CurrentLogin | nu
  * A non-blank `label` (trimmed) names the account, new or re-imported.
  */
 export async function importCurrentLogin(
-  d: UseCaseDeps,
-  opts: { label?: string | undefined } = {},
+  deps: UseCaseDeps,
+  options: { label?: string | undefined } = {},
 ): Promise<StoredAccount> {
-  const label = opts.label?.trim() || undefined
-  const account = await d.mutex.run(async () => {
-    const login = await d.session.readCurrentLogin()
+  const label = options.label?.trim() || undefined
+  const account = await deps.mutex.run(async () => {
+    const login = await deps.session.readCurrentLogin()
     if (!login) throw new NotLoggedInError()
     const { oauth, account: identity } = login
-    const config = await d.config.load()
-    const existing = config.accounts.find((a) => a.id === identity.accountUuid)
+    const config = await deps.config.load()
+    const existing = config.accounts.find((account) => account.id === identity.accountUuid)
     const fresh = {
       email: identity.emailAddress,
-      organizationName: str(identity.organizationName),
-      subscriptionType: str(oauth.subscriptionType),
+      organizationName: nonEmptyString(identity.organizationName),
+      subscriptionType: nonEmptyString(oauth.subscriptionType),
       needsReauth: false,
       oauthAccount: identity,
     }
@@ -100,87 +102,98 @@ export async function importCurrentLogin(
       ? { ...existing, ...fresh, ...(label && { label }) }
       : {
           id: identity.accountUuid,
-          label: label ?? str(identity.displayName) ?? identity.emailAddress,
+          label: label ?? nonEmptyString(identity.displayName) ?? identity.emailAddress,
           enabled: true,
-          addedAt: d.clock.now(),
+          addedAt: deps.clock.now(),
           ...fresh,
         }
-    await d.secrets.set(saved.id, oauth)
-    await d.config.save({
+    await deps.secrets.set(saved.id, oauth)
+    await deps.config.save({
       ...config,
       accounts: existing
-        ? config.accounts.map((a) => (a.id === saved.id ? saved : a))
+        ? config.accounts.map((account) => (account.id === saved.id ? saved : account))
         : [...config.accounts, saved],
     })
     if (!existing) {
-      await appendActivity(d, { t: d.clock.now(), type: 'account-added', accountId: saved.id })
+      await appendActivity(deps, {
+        t: deps.clock.now(),
+        type: 'account-added',
+        accountId: saved.id,
+      })
     }
     return saved
   })
-  void d.engine.runNow()
+  void deps.engine.runNow()
   return account
 }
 
 /** Forgets the account, its tokens and its current usage (history points stay until they age out). */
-export async function removeAccount(d: UseCaseDeps, id: AccountId): Promise<void> {
-  await d.mutex.run(async () => {
-    await updateAccounts(d, id, (list) => list.filter((a) => a.id !== id))
-    await d.secrets.delete(id)
-    const s = await d.state.load()
-    const { [id]: _, ...usage } = s.usage
-    await d.state.save({
-      ...s,
+export async function removeAccount(deps: UseCaseDeps, id: AccountId): Promise<void> {
+  await deps.mutex.run(async () => {
+    await updateAccounts(deps, id, (accounts) => accounts.filter((account) => account.id !== id))
+    await deps.secrets.delete(id)
+    const state = await deps.state.load()
+    const { [id]: _removed, ...usage } = state.usage
+    await deps.state.save({
+      ...state,
       usage,
-      activity: [...s.activity, { t: d.clock.now(), type: 'account-removed', accountId: id }],
+      activity: [
+        ...state.activity,
+        { t: deps.clock.now(), type: 'account-removed', accountId: id },
+      ],
     })
   })
-  void d.engine.runNow({ manual: true })
+  void deps.engine.runNow({ manual: true })
 }
 
 /** Drag & drop: `ids` must list every account exactly once (`InvalidOrderError` otherwise). */
-export async function reorderAccounts(d: UseCaseDeps, ids: readonly AccountId[]): Promise<void> {
-  await d.mutex.run(async () => {
-    const config = await d.config.load()
-    await d.config.save({ ...config, accounts: applyOrder(config.accounts, ids) })
+export async function reorderAccounts(deps: UseCaseDeps, ids: readonly AccountId[]): Promise<void> {
+  await deps.mutex.run(async () => {
+    const config = await deps.config.load()
+    await deps.config.save({ ...config, accounts: applyOrder(config.accounts, ids) })
   })
-  await d.engine.runNow({ manual: true })
+  await deps.engine.runNow({ manual: true })
 }
 
 /**
  * "Use now": move the account to the top (manual swap = reorder). Like reorder and enable, it
  * resolves after the engine tick, so the next dashboard fetch already shows the swap.
  */
-export async function promoteAccount(d: UseCaseDeps, id: AccountId): Promise<void> {
-  await d.mutex.run(() => updateAccounts(d, id, (list) => promote(list, id)))
-  await d.engine.runNow({ manual: true })
+export async function promoteAccount(deps: UseCaseDeps, id: AccountId): Promise<void> {
+  await deps.mutex.run(() => updateAccounts(deps, id, (accounts) => promote(accounts, id)))
+  await deps.engine.runNow({ manual: true })
 }
 
 export async function setAccountEnabled(
-  d: UseCaseDeps,
+  deps: UseCaseDeps,
   id: AccountId,
   enabled: boolean,
 ): Promise<void> {
-  await d.mutex.run(() => patchAccount(d, id, { enabled }))
-  await d.engine.runNow({ manual: true })
+  await deps.mutex.run(() => patchAccount(deps, id, { enabled }))
+  await deps.engine.runNow({ manual: true })
 }
 
 /** Label only: cannot change the active account, so the engine is not poked. */
-export async function renameAccount(d: UseCaseDeps, id: AccountId, label: string): Promise<void> {
-  await d.mutex.run(() => patchAccount(d, id, { label }))
+export async function renameAccount(
+  deps: UseCaseDeps,
+  id: AccountId,
+  label: string,
+): Promise<void> {
+  await deps.mutex.run(() => patchAccount(deps, id, { label }))
 }
 
 /** Shallow merge (pass `thresholds` whole). The engine re-reads `pollIntervalSec` on its next tick. */
 export async function updatePreferences(
-  d: UseCaseDeps,
+  deps: UseCaseDeps,
   patch: Partial<Preferences>,
 ): Promise<Preferences> {
-  const preferences = await d.mutex.run(async () => {
-    const config = await d.config.load()
+  const preferences = await deps.mutex.run(async () => {
+    const config = await deps.config.load()
     const next = { ...config.preferences, ...patch }
-    await d.config.save({ ...config, preferences: next })
+    await deps.config.save({ ...config, preferences: next })
     return next
   })
-  void d.engine.runNow()
+  void deps.engine.runNow()
   return preferences
 }
 
@@ -197,27 +210,29 @@ export interface Dashboard {
 }
 
 export async function getDashboard(
-  d: Pick<UseCaseDeps, 'config' | 'state' | 'engine' | 'clock'>,
+  deps: Pick<UseCaseDeps, 'config' | 'state' | 'engine' | 'clock'>,
 ): Promise<Dashboard> {
-  const [config, state] = await Promise.all([d.config.load(), d.state.load()])
-  const now = d.clock.now()
+  const [config, state] = await Promise.all([deps.config.load(), deps.state.load()])
+  const now = deps.clock.now()
   return {
     preferences: config.preferences,
     accounts: config.accounts,
     statuses: Object.fromEntries(
-      config.accounts.map((a) => [
-        a.id,
-        accountStatus(a, state.usage[a.id], config.preferences.thresholds, now),
+      config.accounts.map((account) => [
+        account.id,
+        accountStatus(account, state.usage[account.id], config.preferences.thresholds, now),
       ]),
     ),
     usage: state.usage,
     activity: state.activity,
     activeId: state.lastActiveId,
-    engine: d.engine.status(),
+    engine: deps.engine.status(),
   }
 }
 
 /** Served apart from the dashboard: it only changes once per engine tick. */
-export async function getHistory(d: Pick<UseCaseDeps, 'state'>): Promise<readonly HistoryPoint[]> {
-  return (await d.state.load()).history
+export async function getHistory(
+  deps: Pick<UseCaseDeps, 'state'>,
+): Promise<readonly HistoryPoint[]> {
+  return (await deps.state.load()).history
 }

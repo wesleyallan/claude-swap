@@ -26,8 +26,8 @@ export function AddAccountModal() {
   const id = useId()
   const login = current.data?.login
 
-  const submit = (e: FormEvent) => {
-    e.preventDefault()
+  const submit = (event: FormEvent) => {
+    event.preventDefault()
     if (!login) return
     importLogin.mutate(label, {
       onSuccess: (account) => {
@@ -77,7 +77,7 @@ export function AddAccountModal() {
             autoComplete="off"
             placeholder={login?.email}
             aria-describedby={`${id}-label-desc`}
-            onChange={(e) => setLabel(e.target.value)}
+            onChange={(event) => setLabel(event.target.value)}
           />
           <FieldDescription id={`${id}-label-desc`}>{t('labelHint')}</FieldDescription>
         </Field>

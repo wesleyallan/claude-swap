@@ -26,13 +26,13 @@ const base = z.object({
   autoRotate: z.boolean(),
 })
 
-export const toForm = (p: Preferences): SettingsForm => ({
-  theme: p.theme,
-  locale: p.locale,
-  autoRotate: p.autoRotate,
-  fiveHour: String(p.thresholds.fiveHour),
-  sevenDay: String(p.thresholds.sevenDay),
-  pollIntervalSec: String(p.pollIntervalSec),
+export const toForm = (preferences: Preferences): SettingsForm => ({
+  theme: preferences.theme,
+  locale: preferences.locale,
+  autoRotate: preferences.autoRotate,
+  fiveHour: String(preferences.thresholds.fiveHour),
+  sevenDay: String(preferences.thresholds.sevenDay),
+  pollIntervalSec: String(preferences.pollIntervalSec),
 })
 
 /**
@@ -44,21 +44,21 @@ export function parseSettings(
   saved: Preferences,
   form: SettingsForm,
 ): { ok: true; preferences: Preferences } | { ok: false; errors: SettingsErrors } {
-  const before = toForm(saved)
-  const field = (k: keyof SettingsErrors) =>
-    form[k].trim() === before[k] ? z.coerce.number() : bounded[k]
-  const r = base
+  const savedForm = toForm(saved)
+  const numberSchema = (field: keyof SettingsErrors) =>
+    form[field].trim() === savedForm[field] ? z.coerce.number() : bounded[field]
+  const result = base
     .extend({
-      fiveHour: field('fiveHour'),
-      sevenDay: field('sevenDay'),
-      pollIntervalSec: field('pollIntervalSec'),
+      fiveHour: numberSchema('fiveHour'),
+      sevenDay: numberSchema('sevenDay'),
+      pollIntervalSec: numberSchema('pollIntervalSec'),
     })
     .safeParse(form)
-  if (!r.success) {
+  if (!result.success) {
     const errors: SettingsErrors = {}
-    for (const issue of r.error.issues) errors[issue.path[0] as keyof SettingsErrors] = true
+    for (const issue of result.error.issues) errors[issue.path[0] as keyof SettingsErrors] = true
     return { ok: false, errors }
   }
-  const { fiveHour, sevenDay, ...rest } = r.data
+  const { fiveHour, sevenDay, ...rest } = result.data
   return { ok: true, preferences: { ...rest, thresholds: { fiveHour, sevenDay } } }
 }

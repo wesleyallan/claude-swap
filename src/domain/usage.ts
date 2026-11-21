@@ -13,19 +13,21 @@ export interface UsageSnapshot {
   readonly error?: string
 }
 
-const windows = (s: UsageSnapshot, t: Thresholds) =>
+const windowsWithThresholds = (snapshot: UsageSnapshot, thresholds: Thresholds) =>
   [
-    [s.fiveHour, t.fiveHour],
-    [s.sevenDay, t.sevenDay],
+    [snapshot.fiveHour, thresholds.fiveHour],
+    [snapshot.sevenDay, thresholds.sevenDay],
   ] as const
 
 /**
  * Reset times of the windows that block the account right now. A window blocks only while
  * `utilization >= threshold` and `resetsAt > now`; a past or unknown `resetsAt` never blocks.
  */
-function blockingResets(snapshot: UsageSnapshot, t: Thresholds, now: Date): Date[] {
-  return windows(snapshot, t).flatMap(([w, threshold]) =>
-    w?.resetsAt && w.resetsAt > now && w.utilization >= threshold ? [w.resetsAt] : [],
+function blockingResets(snapshot: UsageSnapshot, thresholds: Thresholds, now: Date): Date[] {
+  return windowsWithThresholds(snapshot, thresholds).flatMap(([window, threshold]) =>
+    window?.resetsAt && window.resetsAt > now && window.utilization >= threshold
+      ? [window.resetsAt]
+      : [],
   )
 }
 
@@ -54,7 +56,7 @@ export function exhaustedUntil(
 /** Earliest known reset of either window (for countdowns), or null if none is known. */
 export function nextResetAt(snapshot: UsageSnapshot): Date | null {
   const resets = [snapshot.fiveHour?.resetsAt, snapshot.sevenDay?.resetsAt].filter(
-    (d): d is Date => d instanceof Date,
+    (reset): reset is Date => reset instanceof Date,
   )
   return resets.length ? new Date(Math.min(...resets.map(Number))) : null
 }

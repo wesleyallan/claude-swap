@@ -30,8 +30,8 @@ export function AccountList({ accounts, usage, activeId, thresholds }: Props) {
   const setEnabled = useSetAccountEnabled()
   const [status, setStatus] = useState('')
   const total = accounts.length
-  const ids = accounts.map((a) => a.id)
-  const nameOf = (id: unknown) => accounts.find((a) => a.id === id)?.label ?? String(id)
+  const ids = accounts.map((account) => account.id)
+  const nameOf = (id: unknown) => accounts.find((account) => account.id === id)?.label ?? String(id)
 
   const onMove = (id: string, direction: -1 | 1) => {
     const from = ids.indexOf(id)
@@ -77,14 +77,14 @@ export function AccountList({ accounts, usage, activeId, thresholds }: Props) {
       }}
     >
       <ol aria-labelledby="accounts-title" className="flex flex-col gap-3">
-        {accounts.map((a: Account, index) => (
+        {accounts.map((account: Account, index) => (
           <SortableRow
-            key={a.id}
-            account={a}
-            usage={usage[a.id]}
+            key={account.id}
+            account={account}
+            usage={usage[account.id]}
             index={index}
             total={total}
-            active={a.id === activeId}
+            active={account.id === activeId}
             thresholds={thresholds}
             onPromote={(id) => promote.mutate(id)}
             onMove={onMove}

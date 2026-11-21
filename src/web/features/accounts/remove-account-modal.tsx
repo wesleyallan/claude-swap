@@ -16,7 +16,7 @@ export function RemoveAccountModal() {
   const navigate = useNavigate()
   const { data } = useDashboard()
   const remove = useRemoveAccount()
-  const account = data?.accounts.find((a) => a.id === id)
+  const account = data?.accounts.find((candidate) => candidate.id === id)
   // Same rule as the dashboard: while an unknown login is live, no stored account is in use.
   const active = account && !data?.engine.unknownLogin && data?.activeId === account.id
 

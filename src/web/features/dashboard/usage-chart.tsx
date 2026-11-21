@@ -1,4 +1,3 @@
-// Loaded lazily (Recharts is the heaviest UI dependency): see `dashboard.tsx`.
 import { CartesianGrid, Line, LineChart, ReferenceLine, XAxis, YAxis } from 'recharts'
 import { useFormatter, useNow, useTranslations } from 'use-intl'
 import {
@@ -13,7 +12,7 @@ import type { Account, Dashboard, HistoryPoint } from '@/web/lib/api'
 import { chartRows, timeTicks, type UsageWindowKey } from './model'
 
 const HOUR_MS = 3_600_000
-const RANGES: Record<UsageWindowKey, number> = {
+const RANGE_MS: Record<UsageWindowKey, number> = {
   fiveHour: 24 * HOUR_MS,
   sevenDay: 7 * 24 * HOUR_MS,
 }
@@ -34,16 +33,20 @@ function Panel({ window, history, accounts, thresholds, config }: PanelProps) {
   const format = useFormatter()
   const now = useNow({ updateInterval: 60_000 })
   const ids = accounts.map((account) => account.id)
-  const rows = chartRows(history, ids, window, now.getTime() - RANGES[window])
-  const pct = (v: number) => format.number(v / 100, { style: 'percent', maximumFractionDigits: 0 })
+  const from = now.getTime() - RANGE_MS[window]
+  const rows = chartRows(history, ids, window, from)
+  const percent = (value: number) =>
+    format.number(value / 100, { style: 'percent', maximumFractionDigits: 0 })
   // Only accounts with points in range get a line (and a legend entry).
-  const series = accounts.flatMap((a, i) => {
-    const last = rows.findLast((r) => r[`s${i}`] !== undefined)?.[`s${i}`]
-    return last === undefined ? [] : [{ a, key: `s${i}`, last }]
+  const series = accounts.flatMap((account, index) => {
+    const key = `s${index}` as const
+    const latest = rows.findLast((row) => row[key] !== undefined)?.[key]
+    return latest === undefined ? [] : [{ account, key, latest }]
   })
-  const latest = series.map((s) => t('value', { name: s.a.label, value: pct(s.last) }))
-  const from = now.getTime() - RANGES[window]
-  const tick = (ms: number) =>
+  const latestValues = series.map(({ account, latest }) =>
+    t('value', { name: account.label, value: percent(latest) }),
+  )
+  const formatTick = (ms: number) =>
     window === 'fiveHour'
       ? format.dateTime(new Date(ms), { hour: 'numeric', minute: '2-digit' })
       : format.dateTime(new Date(ms), { weekday: 'short' })
@@ -54,7 +57,7 @@ function Panel({ window, history, accounts, thresholds, config }: PanelProps) {
         {t(window)}
       </figcaption>
       <p className="sr-only">
-        {latest.length ? t('summary', { values: latest.join(', ') }) : t('summaryNone')}
+        {latestValues.length ? t('summary', { values: latestValues.join(', ') }) : t('summaryNone')}
       </p>
       <ChartContainer config={config} className="aspect-auto h-56 w-full">
         <LineChart data={rows} margin={{ top: 8, right: 8, bottom: 0, left: -12 }}>
@@ -65,7 +68,7 @@ function Panel({ window, history, accounts, thresholds, config }: PanelProps) {
             scale="time"
             domain={[from, now.getTime()]}
             ticks={timeTicks(from, now.getTime(), window === 'fiveHour' ? 4 : 24)}
-            tickFormatter={tick}
+            tickFormatter={formatTick}
             tickLine={false}
             axisLine={false}
             tickMargin={8}
@@ -74,7 +77,7 @@ function Panel({ window, history, accounts, thresholds, config }: PanelProps) {
           <YAxis
             domain={[0, 100]}
             ticks={[0, 50, 100]}
-            tickFormatter={pct}
+            tickFormatter={percent}
             tickLine={false}
             axisLine={false}
             width={56}
@@ -94,14 +97,14 @@ function Panel({ window, history, accounts, thresholds, config }: PanelProps) {
                     timeStyle: 'short',
                   })
                 }
-                valueFormatter={pct}
+                valueFormatter={percent}
               />
             }
           />
           <ChartLegend content={<ChartLegendContent className="flex-wrap" />} />
-          {series.map(({ a, key }) => (
+          {series.map(({ account, key }) => (
             <Line
-              key={a.id}
+              key={account.id}
               dataKey={key}
               name={key}
               type="monotone"
@@ -121,9 +124,9 @@ function Panel({ window, history, accounts, thresholds, config }: PanelProps) {
 /** Utilization over time: one line per account, 5-hour and weekly windows side by side. */
 export default function UsageChart(props: UsageChartProps) {
   const config: ChartConfig = Object.fromEntries(
-    props.accounts.map((a, i) => [
-      `s${i}`,
-      { label: a.label, color: `var(--chart-${(i % 5) + 1})` },
+    props.accounts.map((account, index) => [
+      `s${index}`,
+      { label: account.label, color: `var(--chart-${(index % 5) + 1})` },
     ]),
   )
   return (
