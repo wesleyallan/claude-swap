@@ -483,8 +483,9 @@ describe('Engine scheduling', () => {
   it('manual promote → swap labelled manual', async () => {
     const s = setup()
     const deps: UseCaseDeps = { ...s, engine: s.engine }
-    await promoteAccount(deps, 'c')
+    const promoted = promoteAccount(deps, 'c')
     await vi.advanceTimersByTimeAsync(DEBOUNCE_MS)
+    await promoted // resolves only after the tick, so the swap is already done
     expect(s.live()).toBe('c')
     expect(s.swaps()).toMatchObject([{ from: 'a', to: 'c', reason: 'manual' }])
     // the manual flag is consumed: a later automatic swap is labelled by the policy

@@ -158,9 +158,11 @@ export class FakeEngine implements EngineControl {
     nextTickAt: null,
     unknownLogin: null,
   }
+  /** Set to hold `runNow` open, to check a caller waits for the tick. */
+  gate: Promise<void> = Promise.resolve()
   runNow(options: RunOptions = {}) {
     this.runs.push(options)
-    return Promise.resolve()
+    return this.gate
   }
   status() {
     return this.current

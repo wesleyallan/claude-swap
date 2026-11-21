@@ -143,13 +143,16 @@ export async function reorderAccounts(d: UseCaseDeps, ids: readonly AccountId[])
     const config = await d.config.load()
     await d.config.save({ ...config, accounts: applyOrder(config.accounts, ids) })
   })
-  void d.engine.runNow({ manual: true })
+  await d.engine.runNow({ manual: true })
 }
 
-/** "Use now": move the account to the top (manual swap = reorder). */
+/**
+ * "Use now": move the account to the top (manual swap = reorder). Like reorder and enable, it
+ * resolves after the engine tick, so the next dashboard fetch already shows the swap.
+ */
 export async function promoteAccount(d: UseCaseDeps, id: AccountId): Promise<void> {
   await d.mutex.run(() => updateAccounts(d, id, (list) => promote(list, id)))
-  void d.engine.runNow({ manual: true })
+  await d.engine.runNow({ manual: true })
 }
 
 export async function setAccountEnabled(
@@ -158,7 +161,7 @@ export async function setAccountEnabled(
   enabled: boolean,
 ): Promise<void> {
   await d.mutex.run(() => patchAccount(d, id, { enabled }))
-  void d.engine.runNow({ manual: true })
+  await d.engine.runNow({ manual: true })
 }
 
 /** Label only: cannot change the active account, so the engine is not poked. */

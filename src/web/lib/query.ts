@@ -83,11 +83,17 @@ export const useUpdatePreferences = () =>
 
 export const useReorderAccounts = () => useDashboardMutation(putOrder, ordered)
 
-/** "Use now": moves the account to the top; the engine then makes it active. */
+/**
+ * "Use now": moves the account to the top. The request returns after the engine swapped, so a
+ * healthy account is shown active at once to hide that wait.
+ */
 export const usePromoteAccount = () =>
-  useDashboardMutation(promoteAccount, (d, id) =>
-    ordered(d, [id, ...d.accounts.map((a) => a.id).filter((x) => x !== id)]),
-  )
+  useDashboardMutation(promoteAccount, (d, id) => {
+    const next = ordered(d, [id, ...d.accounts.map((a) => a.id).filter((x) => x !== id)])
+    const healthy = d.accounts.find((a) => a.id === id)?.status === 'ok'
+    // A paused engine (unknown login) will not swap.
+    return healthy && !d.engine.unknownLogin ? { ...next, activeId: id } : next
+  })
 
 export const useSetAccountEnabled = () =>
   useDashboardMutation(setAccountEnabled, (d, { id, enabled }) => ({

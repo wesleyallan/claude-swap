@@ -189,6 +189,25 @@ describe('account mutations', () => {
     expect(d.engine.runs).toEqual([{ manual: true }])
   })
 
+  it('reorder, promote and enable wait for the engine run before resolving', async () => {
+    const d = setup(['a', 'b', 'c'])
+    let release = () => {}
+    d.engine.gate = new Promise((r) => {
+      release = r
+    })
+    let done = 0
+    const calls = [
+      reorderAccounts(d, ['b', 'a', 'c']),
+      promoteAccount(d, 'c'),
+      setAccountEnabled(d, 'a', false),
+    ].map((p) => p.then(() => done++))
+    await new Promise((r) => setTimeout(r, 10))
+    expect(done).toBe(0)
+    release()
+    await Promise.all(calls)
+    expect(done).toBe(3)
+  })
+
   it('renameAccount changes the label without running the engine', async () => {
     const d = setup()
     await renameAccount(d, 'a', 'Work')

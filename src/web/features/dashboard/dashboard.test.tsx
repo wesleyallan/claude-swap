@@ -211,6 +211,8 @@ it('promotes with Use now and toggles an account', async () => {
     within(await rowOf('Account B')).getByRole('button', { name: 'Use now: Account B' }),
   )
   expect((await order())[0]).toBe('Account B')
+  // B has hit its limit, so the engine will not activate it: A keeps the badge.
+  expect(within(await rowOf('Account A')).getByText('Active')).toBeInTheDocument()
   await user.click(screen.getByRole('switch', { name: 'Enable Account D' }))
   await waitFor(() =>
     expect(requests).toEqual([
@@ -218,6 +220,25 @@ it('promotes with Use now and toggles an account', async () => {
       { method: 'PATCH', path: '/api/accounts/d', body: { enabled: true } },
     ]),
   )
+})
+
+it('marks a healthy account active as soon as Use now is clicked', async () => {
+  dashboard.accounts[1] = account('b')
+  const respond = fetchMock.getMockImplementation()
+  if (!respond) throw new Error('fetchMock has no implementation')
+  // The swap never finishes, so only the optimistic update can show the badge.
+  fetchMock.mockImplementation((input, init) =>
+    String(input instanceof Request ? input.url : input).endsWith('/promote')
+      ? new Promise<Response>(() => {})
+      : respond(input, init),
+  )
+  const user = userEvent.setup()
+  renderApp()
+  await user.click(
+    within(await rowOf('Account B')).getByRole('button', { name: 'Use now: Account B' }),
+  )
+  expect(within(await rowOf('Account B')).getByText('Active')).toBeInTheDocument()
+  expect(within(await rowOf('Account A')).queryByText('Active')).not.toBeInTheDocument()
 })
 
 it('flags an unknown Claude Code login and links to the import modal', async () => {
