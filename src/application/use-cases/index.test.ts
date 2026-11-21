@@ -15,6 +15,7 @@ import {
 import {
   getCurrentLogin,
   getDashboard,
+  getHistory,
   importCurrentLogin,
   NotLoggedInError,
   promoteAccount,
@@ -238,7 +239,7 @@ describe('updatePreferences', () => {
 })
 
 describe('getDashboard', () => {
-  it('returns accounts, usage, history, activity, active id and engine status', async () => {
+  it('returns accounts, usage, activity, active id and engine status', async () => {
     const d = setup()
     const resetsAt = new Date(d.clock.now().getTime() + 60_000)
     d.state.data = {
@@ -254,11 +255,19 @@ describe('getDashboard', () => {
       accounts: d.config.data.accounts,
       statuses: { a: 'exhausted', b: 'unknown' },
       usage: d.state.data.usage,
-      history: [],
       activity: [],
       activeId: 'a',
       engine: d.engine.current,
     })
     expect(JSON.stringify(dash)).not.toMatch(/fake-(access|refresh)/)
+  })
+})
+
+describe('getHistory', () => {
+  it('returns the stored history points', async () => {
+    const d = setup()
+    const point = { t: d.clock.now(), accountId: 'a', fiveHour: 10, sevenDay: 20 }
+    d.state.data = { ...d.state.data, history: [point] }
+    expect(await getHistory(d)).toEqual([point])
   })
 })

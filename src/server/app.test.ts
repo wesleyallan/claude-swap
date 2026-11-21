@@ -161,6 +161,33 @@ describe('api', () => {
     expect(JSON.stringify(body)).not.toMatch(/fake-(access|refresh)|oauthAccount|token/i)
   })
 
+  it('GET /history returns the points apart from the dashboard', async () => {
+    const t = new Date('2026-11-19T12:00:00.000Z')
+    await c.state.save({
+      ...(await c.state.load()),
+      history: [{ t, accountId: 'a', fiveHour: 40, sevenDay: 10 }],
+    })
+    expect(await (await req('/api/history')).json()).toEqual([
+      { t: t.toISOString(), accountId: 'a', fiveHour: 40, sevenDay: 10 },
+    ])
+    expect(await (await req('/api/dashboard')).json()).not.toHaveProperty('history')
+  })
+
+  it('gzips large JSON responses when the client accepts it', async () => {
+    const t = new Date('2026-11-19T12:00:00.000Z')
+    const history = Array.from({ length: 200 }, (_, i) => ({
+      t: new Date(t.getTime() + i * 1000),
+      accountId: 'a',
+      fiveHour: i % 100,
+      sevenDay: null,
+    }))
+    await c.state.save({ ...(await c.state.load()), history })
+    const res = await req('/api/history', { headers: { 'accept-encoding': 'gzip' } })
+    expect(res.headers.get('content-encoding')).toBe('gzip')
+    const body = await new Response(res.body?.pipeThrough(new DecompressionStream('gzip'))).json()
+    expect(body).toHaveLength(200)
+  })
+
   it('POST /accounts/import imports the live login', async () => {
     session.live = {
       oauth: fakeTokens('c', 0),

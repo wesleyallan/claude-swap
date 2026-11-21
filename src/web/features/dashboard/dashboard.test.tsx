@@ -1,9 +1,9 @@
 import { createMemoryHistory, RouterProvider } from '@tanstack/react-router'
-import { act, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { AppProviders } from '@/web/app'
-import type { Dashboard } from '@/web/lib/api'
+import type { Dashboard, HistoryPoint } from '@/web/lib/api'
 import { createQueryClient } from '@/web/lib/query'
 import { createAppRouter } from '@/web/router'
 
@@ -52,7 +52,6 @@ function baseDashboard(): Dashboard {
         error: 'HTTP 429',
       },
     },
-    history: [],
     activity: [
       { t: iso(-60), type: 'swap', from: 'b', to: 'a', reason: 'auto-exhausted' },
       { t: iso(-26 * 60), type: 'swap', from: 'a', to: 'b', reason: 'manual' },
@@ -63,6 +62,7 @@ function baseDashboard(): Dashboard {
 }
 
 let dashboard: Dashboard
+let history: HistoryPoint[] = []
 let failMutations = false
 const requests: { method: string; path: string; body: unknown }[] = []
 
@@ -70,6 +70,7 @@ const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => 
   const url = new URL(String(input instanceof Request ? input.url : input), 'http://localhost')
   const method = input instanceof Request ? input.method : (init?.method ?? 'GET')
   if (method === 'GET' && url.pathname === '/api/dashboard') return Response.json(dashboard)
+  if (method === 'GET' && url.pathname === '/api/history') return Response.json(history)
   requests.push({ method, path: url.pathname, body: init?.body && JSON.parse(String(init.body)) })
   if (failMutations) return Response.json({ error: 'internal' }, { status: 500 })
   const promoted = url.pathname.match(/^\/api\/accounts\/(\w+)\/promote$/)?.[1]
@@ -90,6 +91,7 @@ const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => 
 beforeEach(() => {
   vi.useFakeTimers({ now: NOW, toFake: ['Date'] })
   dashboard = baseDashboard()
+  history = []
   failMutations = false
   requests.length = 0
   vi.stubGlobal('fetch', fetchMock)
@@ -171,6 +173,16 @@ it('shows the stat tiles', async () => {
   expect(within(summary).getByText('in 30 minutes')).toBeInTheDocument() // b's 5h reset
   expect(within(summary).getByText('1 automatic or manual swap')).toBeInTheDocument()
   expect(within(summary).getByText('Automatic')).toBeInTheDocument()
+})
+
+it('loads the chart from /api/history, apart from the dashboard', async () => {
+  renderApp()
+  expect(await screen.findByText(/No usage recorded yet/)).toBeInTheDocument()
+  cleanup()
+  history = [{ t: iso(-5), accountId: 'a', fiveHour: 40, sevenDay: 70 }]
+  renderApp()
+  expect(await screen.findByText('5-hour window · last 24 h')).toBeInTheDocument()
+  expect(screen.getByText('Latest values: Account A: 40%.')).toBeInTheDocument()
 })
 
 it('reorders with the keyboard, optimistically, keeping focus on the arrow', async () => {
@@ -282,8 +294,10 @@ it('shows skeletons while loading', async () => {
 
 it('shows an error with retry when the server is down', async () => {
   let fail = true
-  fetchMock.mockImplementation(async () =>
-    fail ? Promise.reject(new TypeError('offline')) : Response.json(dashboard),
+  fetchMock.mockImplementation(async (input) =>
+    fail
+      ? Promise.reject(new TypeError('offline'))
+      : Response.json(String(input).endsWith('/api/history') ? history : dashboard),
   )
   const user = userEvent.setup()
   renderApp()

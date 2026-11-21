@@ -9,7 +9,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/web/components/ui/chart'
-import type { Dashboard } from '@/web/lib/api'
+import type { Account, Dashboard, HistoryPoint } from '@/web/lib/api'
 import { chartRows, timeTicks, type UsageWindowKey } from './model'
 
 const HOUR_MS = 3_600_000
@@ -18,21 +18,26 @@ const RANGES: Record<UsageWindowKey, number> = {
   sevenDay: 7 * 24 * HOUR_MS,
 }
 
-interface PanelProps {
+interface UsageChartProps {
+  history: readonly HistoryPoint[]
+  accounts: readonly Account[]
+  thresholds: Dashboard['preferences']['thresholds']
+}
+
+interface PanelProps extends UsageChartProps {
   window: UsageWindowKey
-  data: Dashboard
   config: ChartConfig
 }
 
-function Panel({ window, data, config }: PanelProps) {
+function Panel({ window, history, accounts, thresholds, config }: PanelProps) {
   const t = useTranslations('chart')
   const format = useFormatter()
   const now = useNow({ updateInterval: 60_000 })
-  const ids = data.accounts.map((a) => a.id)
-  const rows = chartRows(data.history, ids, window, now.getTime() - RANGES[window])
+  const ids = accounts.map((account) => account.id)
+  const rows = chartRows(history, ids, window, now.getTime() - RANGES[window])
   const pct = (v: number) => format.number(v / 100, { style: 'percent', maximumFractionDigits: 0 })
   // Only accounts with points in range get a line (and a legend entry).
-  const series = data.accounts.flatMap((a, i) => {
+  const series = accounts.flatMap((a, i) => {
     const last = rows.findLast((r) => r[`s${i}`] !== undefined)?.[`s${i}`]
     return last === undefined ? [] : [{ a, key: `s${i}`, last }]
   })
@@ -75,7 +80,7 @@ function Panel({ window, data, config }: PanelProps) {
             width={56}
           />
           <ReferenceLine
-            y={data.preferences.thresholds[window]}
+            y={thresholds[window]}
             stroke="var(--destructive)"
             strokeDasharray="4 4"
             strokeOpacity={0.6}
@@ -114,17 +119,17 @@ function Panel({ window, data, config }: PanelProps) {
 }
 
 /** Utilization over time: one line per account, 5-hour and weekly windows side by side. */
-export default function UsageChart({ data }: { data: Dashboard }) {
+export default function UsageChart(props: UsageChartProps) {
   const config: ChartConfig = Object.fromEntries(
-    data.accounts.map((a, i) => [
+    props.accounts.map((a, i) => [
       `s${i}`,
       { label: a.label, color: `var(--chart-${(i % 5) + 1})` },
     ]),
   )
   return (
     <div className="grid gap-8 md:grid-cols-2">
-      <Panel window="fiveHour" data={data} config={config} />
-      <Panel window="sevenDay" data={data} config={config} />
+      <Panel window="fiveHour" config={config} {...props} />
+      <Panel window="sevenDay" config={config} {...props} />
     </div>
   )
 }

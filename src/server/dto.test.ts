@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { fakeAccount } from '@/application/testing/fakes'
 import type { Dashboard } from '@/application/use-cases'
 import { DEFAULT_PREFERENCES } from '@/domain/preferences'
-import { toAccountDto, toDashboardDto } from './dto'
+import { toAccountDto, toDashboardDto, toHistoryDto } from './dto'
 
 const FORBIDDEN = /token|secret|oauth|credential/i
 
@@ -31,7 +31,6 @@ const dashboard: Dashboard = {
   usage: {
     a: { fiveHour: { utilization: 50, resetsAt: t }, sevenDay: null, fetchedAt: t, error: 'e' },
   },
-  history: [{ t, accountId: 'a', fiveHour: 50, sevenDay: null }],
   activity: [{ t, type: 'swap', from: null, to: 'a', reason: 'manual' }],
   statuses: { a: 'ok' },
   activeId: 'a',
@@ -64,7 +63,6 @@ describe('dto', () => {
       fetchedAt: t.toISOString(),
       error: 'e',
     })
-    expect(dto.history[0]?.t).toBe(t.toISOString())
     expect(dto.activity[0]).toEqual({
       t: t.toISOString(),
       type: 'swap',
@@ -79,6 +77,12 @@ describe('dto', () => {
       unknownLogin: 'z@x',
     })
     expect(dto.activeId).toBe('a')
+  })
+
+  it('maps history points with ISO times', () => {
+    expect(toHistoryDto([{ t, accountId: 'a', fiveHour: 50, sevenDay: null }])).toEqual([
+      { t: t.toISOString(), accountId: 'a', fiveHour: 50, sevenDay: null },
+    ])
   })
 
   it('maps a single account', () => {

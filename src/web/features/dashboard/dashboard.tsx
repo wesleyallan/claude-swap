@@ -14,7 +14,7 @@ import {
 } from '@/web/components/ui/empty'
 import { Skeleton } from '@/web/components/ui/skeleton'
 import type { Dashboard as DashboardData } from '@/web/lib/api'
-import { useDashboard } from '@/web/lib/query'
+import { useDashboard, useHistory } from '@/web/lib/query'
 import { lastTickError } from './model'
 import { StatTiles } from './stat-tiles'
 
@@ -24,7 +24,7 @@ const AccountList = lazy(() => import('./account-list').then((m) => ({ default: 
 
 function ChartCard({ data }: { data: DashboardData }) {
   const t = useTranslations('chart')
-  const empty = data.history.length === 0
+  const history = useHistory()
   return (
     <section
       aria-labelledby="usage-title"
@@ -33,7 +33,9 @@ function ChartCard({ data }: { data: DashboardData }) {
       <h2 id="usage-title" className="font-heading text-title-lg">
         {t('title')}
       </h2>
-      {empty ? (
+      {!history.data ? (
+        <ChartSkeleton />
+      ) : history.data.length === 0 ? (
         <Empty className="border-none py-6">
           <EmptyHeader>
             <EmptyMedia variant="icon">
@@ -44,7 +46,11 @@ function ChartCard({ data }: { data: DashboardData }) {
         </Empty>
       ) : (
         <Suspense fallback={<ChartSkeleton />}>
-          <UsageChart data={data} />
+          <UsageChart
+            history={history.data}
+            accounts={data.accounts}
+            thresholds={data.preferences.thresholds}
+          />
         </Suspense>
       )}
     </section>

@@ -1,6 +1,6 @@
 // The only path from server data to the browser. Every field is picked explicitly, so tokens and
 // the Claude Code identity snapshot (`oauthAccount`) can never leak (see dto.test.ts).
-import type { ActivityEntry, StoredAccount } from '@/application/ports'
+import type { ActivityEntry, HistoryPoint, StoredAccount } from '@/application/ports'
 import type { Dashboard } from '@/application/use-cases'
 import type { UsageSnapshot, UsageWindow } from '@/domain/usage'
 
@@ -41,12 +41,6 @@ export const toDashboardDto = (d: Dashboard) => ({
   preferences: d.preferences,
   accounts: d.accounts.map((a) => ({ ...toAccountDto(a), status: d.statuses[a.id] ?? 'unknown' })),
   usage: Object.fromEntries(Object.entries(d.usage).map(([id, s]) => [id, toUsageDto(s)])),
-  history: d.history.map((p) => ({
-    t: p.t.toISOString(),
-    accountId: p.accountId,
-    fiveHour: p.fiveHour,
-    sevenDay: p.sevenDay,
-  })),
   activity: d.activity.map(toActivityDto),
   activeId: d.activeId,
   engine: {
@@ -57,6 +51,14 @@ export const toDashboardDto = (d: Dashboard) => ({
     unknownLogin: d.engine.unknownLogin,
   },
 })
+
+export const toHistoryDto = (history: readonly HistoryPoint[]) =>
+  history.map((point) => ({
+    t: point.t.toISOString(),
+    accountId: point.accountId,
+    fiveHour: point.fiveHour,
+    sevenDay: point.sevenDay,
+  }))
 
 export type DashboardDto = ReturnType<typeof toDashboardDto>
 export type AccountDto = ReturnType<typeof toAccountDto>

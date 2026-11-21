@@ -1,10 +1,17 @@
-import { QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import { useTranslations } from 'use-intl'
 import { toast } from '@/web/components/ui/toast'
 import {
   type Dashboard,
   fetchCurrentLogin,
   fetchDashboard,
+  fetchHistory,
   importCurrentLogin,
   type Locale,
   type Preferences,
@@ -25,6 +32,22 @@ export const createQueryClient = () =>
 const dashboardKey = ['dashboard'] as const
 
 export const useDashboard = () => useQuery({ queryKey: dashboardKey, queryFn: fetchDashboard })
+
+/**
+ * Usage history for the chart. It only changes when the engine finishes a check, so it is keyed
+ * on the dashboard's `lastTickAt` and fetched once per check instead of on every poll.
+ */
+export function useHistory() {
+  const { data } = useDashboard()
+  const lastTickAt = data?.engine.lastTickAt
+  return useQuery({
+    queryKey: ['history', lastTickAt],
+    queryFn: fetchHistory,
+    enabled: data !== undefined,
+    refetchInterval: false,
+    placeholderData: keepPreviousData,
+  })
+}
 
 /** Theme and locale as the server rendered them into <html>, used until the dashboard loads. */
 function fromDocument(): { theme: Theme; locale: Locale } {

@@ -4,12 +4,14 @@ import { join } from 'node:path'
 import { serveStatic } from '@hono/node-server/serve-static'
 import { zValidator } from '@hono/zod-validator'
 import { type Context, Hono, type MiddlewareHandler } from 'hono'
+import { compress } from 'hono/compress'
 import { HTTPException } from 'hono/http-exception'
 import { secureHeaders } from 'hono/secure-headers'
 import * as z from 'zod'
 import {
   getCurrentLogin,
   getDashboard,
+  getHistory,
   importCurrentLogin,
   NotLoggedInError,
   promoteAccount,
@@ -23,7 +25,7 @@ import { AccountNotFoundError, InvalidOrderError } from '@/domain/errors'
 import type { Preferences } from '@/domain/preferences'
 import { ClaudeCodeFileError } from '@/infrastructure/claude-code/claude-code-session'
 import type { Container } from './container'
-import { toAccountDto, toDashboardDto } from './dto'
+import { toAccountDto, toDashboardDto, toHistoryDto } from './dto'
 
 const percent = z.number().min(0).max(100)
 const preferencesPatch = z
@@ -94,6 +96,7 @@ export function createApp(c: Container) {
   const api = new Hono()
     .get('/health', (ctx) => ctx.json({ status: 'ok' as const }))
     .get('/dashboard', async (ctx) => ctx.json(toDashboardDto(await getDashboard(c))))
+    .get('/history', async (ctx) => ctx.json(toHistoryDto(await getHistory(c))))
     .get('/accounts/current', async (ctx) => ctx.json({ login: await getCurrentLogin(c) }))
     .post('/accounts/import', validate('json', importBody), async (ctx) =>
       ctx.json(toAccountDto(await importCurrentLogin(c, ctx.req.valid('json'))), 201),
@@ -135,6 +138,7 @@ export function createApp(c: Container) {
   const app = new Hono()
   app.use(
     guard(c.port),
+    compress(),
     secureHeaders({
       // Everything is same-origin; Base UI/Recharts set inline `style` attributes (and shadcn's
       // chart a <style> element), so styles need 'unsafe-inline'. Scripts never do.

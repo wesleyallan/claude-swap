@@ -18,7 +18,6 @@ const dashboard = () => ({
   preferences,
   accounts: [],
   usage: {},
-  history: [],
   activity: [],
   activeId: null,
   engine: { running: true, lastTickAt: null, nextTickAt: null, unknownLogin: null },

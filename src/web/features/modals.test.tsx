@@ -31,6 +31,7 @@ const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => 
   const url = new URL(String(input instanceof Request ? input.url : input), 'http://localhost')
   const method = input instanceof Request ? input.method : (init?.method ?? 'GET')
   if (method === 'GET' && url.pathname === '/api/dashboard') return Response.json(dashboard)
+  if (method === 'GET' && url.pathname === '/api/history') return Response.json([])
   if (method === 'GET' && url.pathname === '/api/accounts/current') {
     return Response.json({ login: current })
   }
@@ -59,7 +60,6 @@ beforeEach(() => {
     },
     accounts: [account('a'), account('b')],
     usage: {},
-    history: [],
     activity: [],
     activeId: 'a',
     engine: { running: true, lastTickAt: null, nextTickAt: null, unknownLogin: null },

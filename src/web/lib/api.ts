@@ -9,6 +9,7 @@ export type Theme = Preferences['theme']
 export type Locale = Preferences['locale']
 
 export const fetchDashboard = () => parseResponse(api.dashboard.$get())
+export const fetchHistory = () => parseResponse(api.history.$get())
 export const patchPreferences = (json: Partial<Preferences>) =>
   parseResponse(api.preferences.$patch({ json }))
 
@@ -16,6 +17,7 @@ export type Dashboard = Awaited<ReturnType<typeof fetchDashboard>>
 export type Account = Dashboard['accounts'][number]
 export type AccountStatus = Account['status']
 export type Usage = Dashboard['usage'][string]
+export type HistoryPoint = Awaited<ReturnType<typeof fetchHistory>>[number]
 
 export const putOrder = (ids: string[]) => parseResponse(api.accounts.order.$put({ json: { ids } }))
 export const promoteAccount = (id: string) =>

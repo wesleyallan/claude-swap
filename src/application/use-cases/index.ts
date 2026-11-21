@@ -191,7 +191,6 @@ export interface Dashboard {
   /** Per account id, derived from the account, its last snapshot and the thresholds right now. */
   readonly statuses: Readonly<Record<AccountId, AccountStatus>>
   readonly usage: AppState['usage']
-  readonly history: readonly HistoryPoint[]
   readonly activity: readonly ActivityEntry[]
   readonly activeId: AccountId | null
   readonly engine: EngineStatus
@@ -212,9 +211,13 @@ export async function getDashboard(
       ]),
     ),
     usage: state.usage,
-    history: state.history,
     activity: state.activity,
     activeId: state.lastActiveId,
     engine: d.engine.status(),
   }
+}
+
+/** Served apart from the dashboard: it only changes once per engine tick. */
+export async function getHistory(d: Pick<UseCaseDeps, 'state'>): Promise<readonly HistoryPoint[]> {
+  return (await d.state.load()).history
 }
