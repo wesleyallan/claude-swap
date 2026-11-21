@@ -250,6 +250,17 @@ it('docs: shows the icon in the title and opens external links in a new tab', as
   }
 })
 
+it('docs: a code icon next to close opens the developer docs page', async () => {
+  const user = userEvent.setup()
+  renderAt('/docs')
+  const d = await dialog('Documentation')
+  await user.click(within(d).getByRole('button', { name: 'Developer documentation' }))
+  expect(
+    await screen.findByRole('heading', { level: 1, name: 'Developer documentation' }),
+  ).toBeInTheDocument()
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+})
+
 it('force check runs the engine now and refetches the dashboard', async () => {
   const user = userEvent.setup()
   renderAt('/')
@@ -267,9 +278,9 @@ it('force check runs the engine now and refetches the dashboard', async () => {
   await waitFor(() => expect(dashboardFetches()).toBeGreaterThan(before))
 })
 
-it('/doc-dev: a full page with a section index, in the UI language', async () => {
+it('/docs-dev: a full page with a section index, in the UI language', async () => {
   dashboard = { ...dashboard, preferences: { ...dashboard.preferences, locale: 'pt-BR' } }
-  renderAt('/doc-dev')
+  renderAt('/docs-dev')
   expect(
     await screen.findByRole('heading', { level: 1, name: 'Documentação para desenvolvedores' }),
   ).toBeInTheDocument()
@@ -285,7 +296,7 @@ it('/doc-dev: a full page with a section index, in the UI language', async () =>
   )
 })
 
-it('/doc-dev: every locale has the same sections', () => {
+it('/docs-dev: every locale has the same sections', () => {
   const counts = [devEn, devEs, devPtBR].map((md) => parseDocs(md).length)
   expect(counts[0]).toBeGreaterThan(5)
   expect(new Set(counts).size).toBe(1)

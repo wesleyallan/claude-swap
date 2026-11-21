@@ -43,7 +43,7 @@ for (const theme of ['light', 'dark'] as const) {
       await expectNoViolations(page)
     }
 
-    await page.goto('/doc-dev')
+    await page.goto('/docs-dev')
     await expect(
       page.getByRole('heading', { level: 1, name: 'Developer documentation' }),
     ).toBeVisible()

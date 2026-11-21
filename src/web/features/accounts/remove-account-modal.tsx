@@ -37,6 +37,8 @@ export function RemoveAccountModal() {
   return (
     <RouteModal
       title={tModal('removeAccountTitle')}
+      icon={<Trash2Icon />}
+      iconTone="destructive"
       description={account ? t('confirm', { name: account.label }) : data && t('missing')}
     >
       {!data && <Skeleton aria-busy className="h-10" />}

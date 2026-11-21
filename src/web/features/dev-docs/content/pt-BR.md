@@ -117,7 +117,7 @@ As rotas são finas: validam a entrada com zod, chamam um caso de uso e mapeiam 
 
 ## App web
 
-- **Uma tela e rotas de modal.** `/settings`, `/docs`, `/accounts/new` e `/accounts/:id/remove` abrem sobre o painel. Esta página (`/doc-dev`) é a única página inteira fora dele, e nada leva até ela.
+- **Uma tela e rotas de modal.** `/settings`, `/docs`, `/accounts/new` e `/accounts/:id/remove` abrem sobre o painel. Esta página (`/docs-dev`) é a única página inteira fora dele, aberta pelo ícone de código ao lado do botão de fechar do modal de Documentação.
 - **Polling.** O painel é buscado a cada 10 segundos enquanto a aba está visível. O histórico só muda quando o motor termina uma verificação, então a consulta dele usa `engine.lastTickAt` como chave e é buscada uma vez por verificação.
 - **Atualizações otimistas.** Reordenar, Usar agora, habilitar e as configurações atualizam o cache na hora, desfazem com um aviso se a requisição falhar e buscam de novo quando terminam.
 - **Orçamento do bundle.** O JavaScript inicial precisa ficar abaixo de 200 kB gzip. Os modais, o gráfico, o arrastar e o menu de idioma são chunks carregados sob demanda.
@@ -162,4 +162,4 @@ Os testes nunca tocam o `~/.claude` ou o `~/.config/claude-swap` reais: apontam 
 
 ## Mantendo esta página atualizada
 
-Esta página e o `README.md` descrevem o sistema como ele é. Uma mudança nas tecnologias, na estrutura, na API, no motor ou nos arquivos de dados precisa atualizar os dois na mesma mudança (a regra está no `AGENTS.md`). A página não tem link em lugar nenhum: abra digitando `/doc-dev`. Ela segue o idioma escolhido no app.
+Esta página e o `README.md` descrevem o sistema como ele é. Uma mudança nas tecnologias, na estrutura, na API, no motor ou nos arquivos de dados precisa atualizar os dois na mesma mudança (a regra está no `AGENTS.md`). Abra pelo ícone de código no modal de Documentação ou em `/docs-dev`. Ela segue o idioma escolhido no app.

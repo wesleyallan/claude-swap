@@ -9,7 +9,7 @@ import ptBR from './content/pt-BR.md?raw'
 
 const content: Record<string, string> = { en, es, 'pt-BR': ptBR }
 
-/** `/doc-dev`: how the project is built, as one page with a section index. Not linked anywhere. */
+/** `/docs-dev`: how the project is built, as one page with a section index. */
 export function DevDocsPage() {
   const t = useTranslations('devDocs')
   const locale = useLocale()

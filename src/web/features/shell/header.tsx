@@ -1,8 +1,9 @@
 import { Link } from '@tanstack/react-router'
 import { cn } from 'cn'
 import { BookOpenIcon, PlusIcon, RefreshCwIcon, SettingsIcon } from 'lucide-react'
-import { lazy, type ReactNode, Suspense, useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { useTranslations } from 'use-intl'
+import { IconLink } from '@/web/components/icon-link'
 import { Logo } from '@/web/components/logo'
 import { Button } from '@/web/components/ui/button'
 import { Skeleton } from '@/web/components/ui/skeleton'
@@ -15,37 +16,6 @@ import { ThemeToggle } from './theme-toggle'
 const LocaleSelect = lazy(() =>
   import('./locale-select').then((m) => ({ default: m.LocaleSelect })),
 )
-
-/** Icon-only link to a modal route; the tooltip shows the same text as its accessible name. */
-function IconLink({
-  to,
-  label,
-  icon,
-}: {
-  to: '/docs' | '/settings'
-  label: string
-  icon: ReactNode
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <Button
-            variant="ghost"
-            size="icon"
-            className="max-sm:size-9"
-            aria-label={label}
-            nativeButton={false}
-            render={<Link to={to} />}
-          />
-        }
-      >
-        {icon}
-      </TooltipTrigger>
-      <TooltipContent side="bottom">{label}</TooltipContent>
-    </Tooltip>
-  )
-}
 
 /** Runs a check now instead of waiting for the poll interval, which then starts over. */
 function ForceCheckButton() {
@@ -110,8 +80,18 @@ export function Header() {
             <span className="max-md:sr-only">{t('header.addAccount')}</span>
           </Button>
           <ForceCheckButton />
-          <IconLink to="/docs" label={t('header.docs')} icon={<BookOpenIcon />} />
-          <IconLink to="/settings" label={t('header.settings')} icon={<SettingsIcon />} />
+          <IconLink
+            to="/docs"
+            label={t('header.docs')}
+            icon={<BookOpenIcon />}
+            className="max-sm:size-9"
+          />
+          <IconLink
+            to="/settings"
+            label={t('header.settings')}
+            icon={<SettingsIcon />}
+            className="max-sm:size-9"
+          />
           <Suspense fallback={<Skeleton className="h-10 w-16 rounded-lg sm:w-32" />}>
             <LocaleSelect />
           </Suspense>

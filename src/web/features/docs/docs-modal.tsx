@@ -1,7 +1,8 @@
 import { cn } from 'cn'
-import { BookOpenIcon } from 'lucide-react'
+import { BookOpenIcon, CodeIcon } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { useLocale, useTranslations } from 'use-intl'
+import { IconLink } from '@/web/components/icon-link'
 import { RouteModal } from '@/web/components/route-modal'
 import en from './content/en.md?raw'
 import es from './content/es.md?raw'
@@ -13,6 +14,7 @@ const content: Record<string, string> = { en, es, 'pt-BR': ptBR }
 /** Help pages: section list on the left, the selected section on the right, in the UI language. */
 export function DocsModal() {
   const t = useTranslations('modal')
+  const tDevDocs = useTranslations('devDocs')
   const locale = useLocale()
   const sections = useMemo(() => parseDocs(content[locale] ?? en), [locale])
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -26,6 +28,9 @@ export function DocsModal() {
     <RouteModal
       title={t('docsTitle')}
       icon={<BookOpenIcon />}
+      actions={
+        <IconLink to="/docs-dev" size="icon-sm" label={tDevDocs('title')} icon={<CodeIcon />} />
+      }
       className="flex h-[min(85dvh,820px)] flex-col overflow-hidden sm:max-w-5xl"
     >
       <div className="-mx-6 -mb-6 flex min-h-0 flex-1 flex-col border-t md:flex-row">

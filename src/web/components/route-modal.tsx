@@ -1,4 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
+import { cn } from 'cn'
 import type { ReactNode } from 'react'
 import { useTranslations } from 'use-intl'
 import {
@@ -16,14 +17,19 @@ import {
  */
 export function RouteModal({
   title,
+  actions,
+  iconTone = 'brand',
   icon,
   description,
   className,
   children,
 }: {
   title: string
+  /** Extra header buttons, placed left of the close button. */
+  actions?: ReactNode
   /** Same icon as the control that opened the modal, shown before the title. */
   icon?: ReactNode
+  iconTone?: 'brand' | 'destructive'
   description?: ReactNode
   /** Extra classes for the dialog panel (e.g. a wider max width). */
   className?: string
@@ -34,20 +40,33 @@ export function RouteModal({
   return (
     <Dialog open onOpenChange={(open) => !open && navigate({ to: '/' })}>
       <DialogContent closeLabel={t('close')} className={className}>
-        <DialogHeader>
-          <DialogTitle className={icon ? 'flex items-center gap-3' : undefined}>
+        <DialogHeader className={cn(icon && 'gap-3')}>
+          <DialogTitle
+            className={cn(
+              icon && 'flex items-center gap-3 leading-tight max-sm:text-title-lg',
+              actions ? 'pr-16' : 'pr-8',
+            )}
+          >
             {icon && (
               <span
                 aria-hidden
-                className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand [&_svg]:size-5"
+                className={cn(
+                  'flex size-10 shrink-0 items-center justify-center rounded-xl [&_svg]:size-5',
+                  iconTone === 'brand'
+                    ? 'bg-brand/10 text-brand'
+                    : 'bg-destructive/10 text-destructive',
+                )}
               >
                 {icon}
               </span>
             )}
-            {title}
+            <span className="min-w-0 break-words">{title}</span>
           </DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
+        {actions && (
+          <div className="absolute top-7 right-14 flex items-center gap-1">{actions}</div>
+        )}
         {children}
       </DialogContent>
     </Dialog>

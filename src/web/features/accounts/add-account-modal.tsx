@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
-import { AlertTriangleIcon, UserPlusIcon } from 'lucide-react'
+import { AlertTriangleIcon, PlusIcon, UserPlusIcon } from 'lucide-react'
 import { type FormEvent, type ReactNode, useId, useState } from 'react'
 import { useTranslations } from 'use-intl'
 import { RouteModal } from '@/web/components/route-modal'
@@ -41,7 +41,7 @@ export function AddAccountModal() {
   }
 
   return (
-    <RouteModal title={tModal('addAccountTitle')} description={t('intro')}>
+    <RouteModal title={tModal('addAccountTitle')} icon={<PlusIcon />} description={t('intro')}>
       <form noValidate onSubmit={submit} className="flex flex-col gap-6">
         <ol className="flex list-inside list-decimal flex-col gap-2 marker:text-muted-foreground">
           <li>{t.rich('step1', { code })}</li>

@@ -117,7 +117,7 @@ Las rutas son finas: validan la entrada con zod, llaman a un caso de uso y mapea
 
 ## App web
 
-- **Una pantalla y rutas de modal.** `/settings`, `/docs`, `/accounts/new` y `/accounts/:id/remove` se abren sobre el panel. Esta página (`/doc-dev`) es la única página completa fuera de él, y nada enlaza a ella.
+- **Una pantalla y rutas de modal.** `/settings`, `/docs`, `/accounts/new` y `/accounts/:id/remove` se abren sobre el panel. Esta página (`/docs-dev`) es la única página completa fuera de él, y se abre desde el icono de código junto al botón de cerrar del modal de Documentación.
 - **Polling.** El panel se pide cada 10 segundos mientras la pestaña está visible. El historial solo cambia cuando el motor termina una comprobación, así que su consulta usa `engine.lastTickAt` como clave y se pide una vez por comprobación.
 - **Actualizaciones optimistas.** Reordenar, Usar ahora, habilitar y la configuración actualizan la caché al instante, se deshacen con un aviso si la petición falla y vuelven a pedir los datos al terminar.
 - **Presupuesto del bundle.** El JavaScript inicial debe quedar por debajo de 200 kB gzip. Los modales, el gráfico, el arrastre y el menú de idioma son chunks cargados bajo demanda.
@@ -162,4 +162,4 @@ Las pruebas nunca tocan los `~/.claude` o `~/.config/claude-swap` reales: apunta
 
 ## Mantener esta página al día
 
-Esta página y el `README.md` describen el sistema tal como es. Un cambio en las tecnologías, la estructura, la API, el motor o los archivos de datos debe actualizar ambos en el mismo cambio (la regla está en `AGENTS.md`). La página no está enlazada en ningún sitio: ábrela escribiendo `/doc-dev`. Sigue el idioma elegido en la app.
+Esta página y el `README.md` describen el sistema tal como es. Un cambio en las tecnologías, la estructura, la API, el motor o los archivos de datos debe actualizar ambos en el mismo cambio (la regla está en `AGENTS.md`). Ábrela desde el icono de código del modal de Documentación o en `/docs-dev`. Sigue el idioma elegido en la app.

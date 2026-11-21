@@ -18,7 +18,7 @@ hosts the engine and a small JSON API, and serves a static React SPA. The web UI
 the engine works with no browser open. No database: all state lives in JSON files.
 
 Full design: [`docs/architecture.md`](docs/architecture.md). Work plan: [`docs/tasks/`](docs/tasks/README.md).
-Visual language: [`DESIGN.md`](DESIGN.md). Developer docs in the app: `/doc-dev` (not linked; type the URL).
+Visual language: [`DESIGN.md`](DESIGN.md). Developer docs in the app: `/docs-dev` (code icon in the Documentation modal).
 
 ## Stack
 
@@ -66,7 +66,7 @@ src/
   web/             React SPA: router.tsx (code-based routes), components/ (ui/ = shadcn
                    primitives, add with `npx shadcn@latest add <name>`), features/,
                    lib/api.ts (Hono RPC client), i18n/messages/{en,es,pt-BR}.json,
-                   features/docs (user guide modal), features/dev-docs (/doc-dev page)
+                   features/docs (user guide modal), features/dev-docs (/docs-dev page)
 tests/e2e/         Playwright specs + mock Anthropic API server
 deploy/            systemd user unit template
 scripts/           service install/uninstall, perf budget (run with node / tsx)
@@ -132,7 +132,7 @@ Most relevant: `tdd`, `vitest`, `vercel-react-best-practices`,
 
 ## Keep the docs current
 
-`README.md` and the developer page `/doc-dev` (`src/web/features/dev-docs/content/{en,es,pt-BR}.md`)
+`README.md` and the developer page `/docs-dev` (`src/web/features/dev-docs/content/{en,es,pt-BR}.md`)
 describe the system as it is. A change to the stack, structure, API routes, engine, data files or
 security model updates both **in the same change**, in all three locales. User-facing behaviour also
 updates the in-app docs (`src/web/features/docs/content/`).

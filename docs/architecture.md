@@ -467,9 +467,16 @@ Separating secrets from preferences keeps the user-editable config safe to open,
   call may join a tick that polled before the test changed the mock, the second is always fresh.
 - 2026-11-21 — **Modal title icons**: `RouteModal` takes an optional `icon` (the header icon that
   opened it), shown in a brand-tinted tile before the title (Settings, Documentation).
-- 2026-11-21 — **Developer docs at `/doc-dev`**: a full page (child of the root route, lazy chunk,
-  not linked anywhere) rendering `features/dev-docs/content/{en,es,pt-BR}.md` with the same
+- 2026-11-21 — **Developer docs at `/docs-dev`** (renamed from `/doc-dev` to match `/docs`): a full
+  page (child of the root route, lazy chunk, opened from a code icon next to the Documentation
+  modal's close button) rendering `features/dev-docs/content/{en,es,pt-BR}.md` with the same
   `parseDocs` as the modal (sections get slug ids for the sticky index). It and the README must be
   updated in the same change as anything they describe (rule in `AGENTS.md`). External links in
   bundled markdown open in a new tab.
+- 2026-11-21 — **Pointer cursor on buttons**: Tailwind v4's preflight gives `<button>` the default
+  arrow, which made the modal close buttons feel inert. A base rule restores `cursor: pointer` on
+  every enabled button and `role="button"` element.
+- 2026-11-21 — **Shared `IconLink`** (`components/icon-link.tsx`): the icon-only link with a
+  tooltip used in the header and in a modal's header actions (`RouteModal` `actions`, placed left
+  of the close button).
 

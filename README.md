@@ -203,8 +203,8 @@ Tests and `perf:budget` never touch your real `~/.claude`, `~/.claude.json` or
 `CLAUDE_CONFIG_DIR` against a mock Anthropic API (`tests/e2e/mock-anthropic.ts`).
 
 Developer documentation (stack and why, architecture, structure, engine, API, patterns, how it was
-built) is a page inside the app, in every supported language: open <http://127.0.0.1:4747/doc-dev>.
-It is not linked from the dashboard. Design: [`docs/architecture.md`](docs/architecture.md). Visual
+built) is a page inside the app, in every supported language: open <http://127.0.0.1:4747/docs-dev>.
+Open it from the code icon in the Documentation modal. Design: [`docs/architecture.md`](docs/architecture.md). Visual
 language: [`DESIGN.md`](DESIGN.md). Contributor and agent rules: [`AGENTS.md`](AGENTS.md).
 
 ### Stack
@@ -216,7 +216,7 @@ language: [`DESIGN.md`](DESIGN.md). Contributor and agent rules: [`AGENTS.md`](A
 | Quality | TypeScript 7 (strict), Biome, Vitest + Testing Library, Playwright + axe |
 
 The code is hexagonal (`domain` → `application` → `infrastructure` / `server` → `web`), and the
-layer rules are enforced by a test (`src/architecture.test.ts`). The `README` and `/doc-dev` are
+layer rules are enforced by a test (`src/architecture.test.ts`). The `README` and `/docs-dev` are
 updated together with any change they describe.
 
 ## Author

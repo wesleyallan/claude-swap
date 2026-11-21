@@ -148,6 +148,11 @@
   body {
     @apply bg-background text-foreground antialiased;
   }
+  /* Tailwind v4's preflight gives buttons the default arrow; clickable things should show a hand. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
   /* biome-ignore-start lint/complexity/noImportantStyles: reduced motion must beat component animations */
   @media (prefers-reduced-motion: reduce) {
     *,
@@ -162,7 +167,7 @@
   /* biome-ignore-end lint/complexity/noImportantStyles: reduced motion must beat component animations */
 }
 
-/* Documentation modal and /doc-dev: rendered markdown in the editorial voice of DESIGN.md. */
+/* Documentation modal and /docs-dev: rendered markdown in the editorial voice of DESIGN.md. */
 @layer components {
   .docs-prose {
     @apply max-w-[68ch] text-[15px] leading-7 text-foreground;

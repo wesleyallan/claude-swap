@@ -117,7 +117,7 @@ Routes stay thin: validate the input with zod, call a use case, map the result t
 
 ## Web app
 
-- **One screen plus modal routes.** `/settings`, `/docs`, `/accounts/new` and `/accounts/:id/remove` render over the dashboard. This page (`/doc-dev`) is the only full page outside it, and nothing links to it.
+- **One screen plus modal routes.** `/settings`, `/docs`, `/accounts/new` and `/accounts/:id/remove` render over the dashboard. This page (`/docs-dev`) is the only full page outside it, opened from the code icon next to the close button of the Documentation modal.
 - **Polling.** The dashboard is fetched every 10 seconds while the tab is visible. The history only changes when the engine finishes a check, so its query is keyed on `engine.lastTickAt` and is fetched once per check.
 - **Optimistic updates.** Reorder, Use now, enable and settings update the cache at once, roll back with a toast when the request fails, and refetch when they settle.
 - **Bundle budget.** The initial JavaScript must stay under 200 kB gzip. Modals, the chart, drag & drop and the language menu are lazy chunks.
@@ -162,4 +162,4 @@ Tests never touch the real `~/.claude` or `~/.config/claude-swap`: they point `H
 
 ## Keeping this page current
 
-This page and the `README.md` describe the system as it is. A change to the stack, the structure, the API, the engine or the data files must update both in the same change (the rule is in `AGENTS.md`). The page is not linked anywhere: open it by typing `/doc-dev`. It follows the language chosen in the app.
+This page and the `README.md` describe the system as it is. A change to the stack, the structure, the API, the engine or the data files must update both in the same change (the rule is in `AGENTS.md`). Open it from the code icon in the Documentation modal or at `/docs-dev`. It follows the language chosen in the app.
