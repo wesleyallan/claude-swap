@@ -18,8 +18,10 @@ test('serves the icons and names the tab after the active account', async ({
 
 test('opens the documentation in the UI language', async ({ page }) => {
   await page.goto('/')
+  await page.getByRole('button', { name: 'Settings' }).hover()
+  await expect(page.locator('[data-slot="tooltip-content"][data-open]')).toHaveText('Settings')
   await page.getByRole('button', { name: 'Documentation' }).hover()
-  await expect(page.locator('[data-slot="tooltip-content"]')).toHaveText('Documentation')
+  await expect(page.locator('[data-slot="tooltip-content"][data-open]')).toHaveText('Documentation')
   await page.getByRole('button', { name: 'Documentation' }).click()
   const dialog = page.getByRole('dialog', { name: 'Documentation' })
   await dialog.getByRole('navigation').getByRole('button', { name: 'Running sessions' }).click()

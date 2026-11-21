@@ -2,6 +2,7 @@ import { type QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { type ReactNode, useEffect } from 'react'
 import { IntlProvider, useTranslations } from 'use-intl'
 import { Toaster } from './components/ui/toast'
+import { TooltipProvider } from './components/ui/tooltip'
 import { messages } from './i18n'
 import { usePreferences } from './lib/query'
 
@@ -30,7 +31,10 @@ function Toasts({ children }: { children: ReactNode }) {
 export function AppProviders({ client, children }: { client: QueryClient; children: ReactNode }) {
   return (
     <QueryClientProvider client={client}>
-      <PreferencesScope>{children}</PreferencesScope>
+      {/* One provider: tooltips open fast and, once one is open, its neighbours open instantly. */}
+      <TooltipProvider delay={150}>
+        <PreferencesScope>{children}</PreferencesScope>
+      </TooltipProvider>
     </QueryClientProvider>
   )
 }
