@@ -233,6 +233,23 @@ it('docs: lists the sections and shows the one picked', async () => {
   )
 })
 
+it('force check runs the engine now and refetches the dashboard', async () => {
+  const user = userEvent.setup()
+  renderAt('/')
+  const button = await screen.findByRole('button', { name: 'Force check' })
+  await waitFor(() => expect(button).toBeEnabled())
+  const dashboardFetches = () =>
+    fetchMock.mock.calls.filter(([input]) => String(input).endsWith('/api/dashboard')).length
+  const before = dashboardFetches()
+  await user.click(button)
+  await waitFor(() =>
+    expect(requests).toContainEqual(
+      expect.objectContaining({ method: 'POST', path: '/api/engine/run' }),
+    ),
+  )
+  await waitFor(() => expect(dashboardFetches()).toBeGreaterThan(before))
+})
+
 it('docs: every locale has the same sections', () => {
   const counts = [en, es, ptBR].map((md) => parseDocs(md).length)
   expect(counts[0]).toBeGreaterThan(3)

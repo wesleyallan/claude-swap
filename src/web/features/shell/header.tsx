@@ -1,12 +1,13 @@
 import { Link } from '@tanstack/react-router'
-import { BookOpenIcon, PlusIcon, SettingsIcon } from 'lucide-react'
+import { cn } from 'cn'
+import { BookOpenIcon, PlusIcon, RefreshCwIcon, SettingsIcon } from 'lucide-react'
 import { lazy, type ReactNode, Suspense, useEffect } from 'react'
 import { useTranslations } from 'use-intl'
 import { Logo } from '@/web/components/logo'
 import { Button } from '@/web/components/ui/button'
 import { Skeleton } from '@/web/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/web/components/ui/tooltip'
-import { useDashboard } from '@/web/lib/query'
+import { useDashboard, useForceCheck } from '@/web/lib/query'
 import { EngineStatus } from './engine-status'
 import { ThemeToggle } from './theme-toggle'
 
@@ -45,6 +46,33 @@ function IconLink({
   )
 }
 
+/** Runs a check now instead of waiting for the poll interval, which then starts over. */
+function ForceCheckButton() {
+  const t = useTranslations('header')
+  const forceCheck = useForceCheck()
+  const { data } = useDashboard()
+  const label = t('forceCheck')
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={label}
+            aria-busy={forceCheck.isPending}
+            disabled={!data || forceCheck.isPending}
+            onClick={() => forceCheck.mutate()}
+          />
+        }
+      >
+        <RefreshCwIcon className={cn(forceCheck.isPending && 'motion-safe:animate-spin')} />
+      </TooltipTrigger>
+      <TooltipContent side="bottom">{label}</TooltipContent>
+    </Tooltip>
+  )
+}
+
 /** Browser tab: "<active account> - Claude Swap", or just the app name. */
 function useDocumentTitle(app: string) {
   const { data } = useDashboard()
@@ -75,6 +103,7 @@ export function Header() {
             <PlusIcon data-icon="inline-start" />
             <span className="max-md:sr-only">{t('header.addAccount')}</span>
           </Button>
+          <ForceCheckButton />
           <IconLink to="/docs" label={t('header.docs')} icon={<BookOpenIcon />} />
           <IconLink to="/settings" label={t('header.settings')} icon={<SettingsIcon />} />
           <Suspense fallback={<Skeleton className="h-10 w-16 rounded-lg sm:w-32" />}>

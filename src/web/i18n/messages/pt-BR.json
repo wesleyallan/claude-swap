@@ -9,7 +9,8 @@
     "language": "Idioma",
     "switchToDark": "Mudar para o tema escuro",
     "switchToLight": "Mudar para o tema claro",
-    "docs": "Documentação"
+    "docs": "Documentação",
+    "forceCheck": "Forçar verificação"
   },
   "engine": {
     "label": "Status do motor",
@@ -112,7 +113,8 @@
   "errors": {
     "saveFailed": "Não foi possível salvar a alteração",
     "rolledBack": "Sua última alteração foi desfeita. Tente de novo.",
-    "importFailed": "Não foi possível importar o login atual do Claude Code"
+    "importFailed": "Não foi possível importar o login atual do Claude Code",
+    "checkFailed": "Não foi possível executar a verificação"
   },
   "addAccount": {
     "intro": "O claude-swap copia a conta em que o Claude Code está logado agora. Para adicionar outra:",
@@ -149,7 +151,7 @@
     "thresholdHint": "Troca de conta quando o uso chega a esta porcentagem da janela.",
     "thresholdError": "Digite um número inteiro de 50 a 100.",
     "pollInterval": "Verificar a cada (segundos)",
-    "pollIntervalHint": "Com que frequência o uso de cada conta é consultado.",
+    "pollIntervalHint": "Com que frequência o uso de cada conta é consultado. O botão de atualizar na barra superior verifica agora e reinicia essa contagem.",
     "pollIntervalError": "Digite um número inteiro de 60 a 3600.",
     "save": "Salvar configurações"
   },

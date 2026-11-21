@@ -193,9 +193,9 @@ export async function dashboard(request: import('@playwright/test').APIRequestCo
   return res.json()
 }
 
-/** Runs an engine tick now (the engine itself polls on its own interval). */
+/** Runs an engine tick now and waits for it (the engine also polls on its own interval). */
 export async function runEngine(request: import('@playwright/test').APIRequestContext) {
-  expect((await request.post('/api/engine/run')).status()).toBe(202)
+  expect((await request.post('/api/engine/run')).status()).toBe(200)
 }
 
 /** Waits until Claude Code's credentials hold `account`'s access token. */

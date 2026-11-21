@@ -114,9 +114,9 @@ describe('security middleware', () => {
   })
 
   it('allows a mutation without Origin (non-browser client) and same-origin', async () => {
-    expect((await req('/api/engine/run', { method: 'POST' })).status).toBe(202)
+    expect((await req('/api/engine/run', { method: 'POST' })).status).toBe(200)
     expect((await req('/api/engine/run', { method: 'POST', headers: SAME_ORIGIN })).status).toBe(
-      202,
+      200,
     )
   })
 
@@ -322,9 +322,21 @@ describe('api', () => {
     }
   })
 
-  it('POST /engine/run pokes the engine without waiting', async () => {
-    const res = await req('/api/engine/run', { method: 'POST' })
-    expect(res.status).toBe(202)
+  it('POST /engine/run answers once the forced tick is done', async () => {
+    let finishTick = () => {}
+    engine.gate = new Promise<void>((resolve) => {
+      finishTick = resolve
+    })
+    let answered = false
+    const pending = Promise.resolve(req('/api/engine/run', { method: 'POST' })).then((res) => {
+      answered = true
+      return res
+    })
+    await new Promise((resolve) => setTimeout(resolve, 10))
+    expect(answered).toBe(false)
+    finishTick()
+    const res = await pending
+    expect(res.status).toBe(200)
     expect(engine.runs).toEqual([{}])
   })
 

@@ -9,7 +9,8 @@
     "language": "Language",
     "switchToDark": "Switch to dark theme",
     "switchToLight": "Switch to light theme",
-    "docs": "Documentation"
+    "docs": "Documentation",
+    "forceCheck": "Force check"
   },
   "engine": {
     "label": "Engine status",
@@ -112,7 +113,8 @@
   "errors": {
     "saveFailed": "Couldn't save the change",
     "rolledBack": "Your last change was undone. Try again.",
-    "importFailed": "Couldn't import the current Claude Code login"
+    "importFailed": "Couldn't import the current Claude Code login",
+    "checkFailed": "Couldn't run the check"
   },
   "addAccount": {
     "intro": "claude-swap copies the account Claude Code is logged in with right now. To add another one:",
@@ -149,7 +151,7 @@
     "thresholdHint": "Swap away once usage reaches this share of the window.",
     "thresholdError": "Enter a whole number from 50 to 100.",
     "pollInterval": "Check every (seconds)",
-    "pollIntervalHint": "How often usage is fetched for each account.",
+    "pollIntervalHint": "How often usage is fetched for each account. The refresh button in the top bar checks now and restarts this countdown.",
     "pollIntervalError": "Enter a whole number from 60 to 3600.",
     "save": "Save settings"
   },

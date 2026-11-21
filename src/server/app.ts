@@ -130,9 +130,9 @@ export function createApp(c: Container) {
       // zod's partial output has `key?: T | undefined`; the use case wants exact optionals.
       ctx.json(await updatePreferences(c, ctx.req.valid('json') as Partial<Preferences>)),
     )
-    .post('/engine/run', (ctx) => {
-      void c.engine.runNow()
-      return ctx.json({ ok: true as const }, 202)
+    .post('/engine/run', async (ctx) => {
+      await c.engine.runNow()
+      return ok(ctx)
     })
 
   const app = new Hono()

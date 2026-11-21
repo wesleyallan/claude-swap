@@ -19,6 +19,7 @@ import {
   promoteAccount,
   putOrder,
   removeAccount,
+  runEngineNow,
   setAccountEnabled,
   type Theme,
 } from './api'
@@ -46,6 +47,17 @@ export function useHistory() {
     enabled: data !== undefined,
     refetchInterval: false,
     placeholderData: keepPreviousData,
+  })
+}
+
+/** Runs an engine check now; the server restarts the poll countdown from it. */
+export function useForceCheck() {
+  const client = useQueryClient()
+  const t = useTranslations('errors')
+  return useMutation({
+    mutationFn: runEngineNow,
+    onError: () => toast.add({ title: t('checkFailed'), type: 'error' }),
+    onSettled: () => client.invalidateQueries({ queryKey: dashboardKey }),
   })
 }
 

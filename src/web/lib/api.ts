@@ -10,6 +10,7 @@ export type Locale = Preferences['locale']
 
 export const fetchDashboard = () => parseResponse(api.dashboard.$get())
 export const fetchHistory = () => parseResponse(api.history.$get())
+export const runEngineNow = () => parseResponse(api.engine.run.$post())
 export const patchPreferences = (json: Partial<Preferences>) =>
   parseResponse(api.preferences.$patch({ json }))
 
