@@ -162,7 +162,7 @@
   /* biome-ignore-end lint/complexity/noImportantStyles: reduced motion must beat component animations */
 }
 
-/* Documentation modal: rendered markdown in the editorial voice of DESIGN.md. */
+/* Documentation modal and /doc-dev: rendered markdown in the editorial voice of DESIGN.md. */
 @layer components {
   .docs-prose {
     @apply max-w-[68ch] text-[15px] leading-7 text-foreground;
@@ -192,8 +192,17 @@
   .docs-prose blockquote {
     @apply rounded-r-lg border-l-4 border-brand bg-muted px-4 py-3 text-muted-foreground;
   }
+  .docs-prose a {
+    @apply rounded-sm font-medium underline decoration-brand/60 underline-offset-3 outline-none hover:decoration-brand focus-visible:ring-[3px] focus-visible:ring-ring/50;
+  }
+  .docs-prose pre {
+    @apply overflow-x-auto rounded-lg bg-muted p-4 text-[13px] leading-6;
+  }
+  .docs-prose pre code {
+    @apply bg-transparent p-0;
+  }
   .docs-prose table {
-    @apply w-full border-collapse overflow-hidden rounded-lg text-sm;
+    @apply w-full border-collapse overflow-hidden rounded-lg text-sm max-md:block max-md:overflow-x-auto;
   }
   .docs-prose th,
   .docs-prose td {

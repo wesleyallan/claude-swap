@@ -10,6 +10,18 @@ You add your accounts and put them in priority order. A small background service
 
 Everything runs on your machine: one process bound to `127.0.0.1`, JSON files for state, no database, no telemetry. This dashboard is optional — the engine keeps working with no browser open.
 
+
+## Lightweight by design
+
+Claude Swap is meant to make a developer's day simpler, not to add one more thing to maintain.
+
+- **Nothing extra to install**: Node.js and the app itself. No database, no Docker, no queue, no cloud account.
+- **One small process**: the engine, the API and this dashboard share one Node process that stays under 100 MB of memory when idle.
+- **Plain files**: settings and state are JSON files you can read (and back up) by hand.
+- **Local only**: it listens on `127.0.0.1`, talks only to Anthropic's own endpoints and sends no telemetry.
+
+Install it once, add your accounts, and forget about it.
+
 ## Getting started
 
 1. In a terminal, run `claude`, then `/login` and sign in with the first account.
@@ -53,7 +65,7 @@ Each account has two usage windows, measured by Anthropic:
 
 An account counts as *limit reached* when either window is at or above its threshold (95 % and 98 % by default) and has not reset yet. Swapping a little before 100 % keeps a running prompt from hitting the hard limit.
 
-Every **check interval** (3 minutes by default) the engine reads usage for each account, refreshes the tokens of inactive accounts before they expire, and picks the active account again. Changing the order, enabling an account or clicking **Use now** runs a check right away.
+Every **check interval** (3 minutes by default) the engine reads usage for each account, refreshes the tokens of inactive accounts before they expire, and picks the active account again. Changing the order, enabling an account or clicking **Use now** runs a check right away. The **Force check** button (the circular arrow in the top bar) does the same on demand and restarts the interval countdown, so two checks never run back to back.
 
 ## Settings
 
@@ -89,3 +101,20 @@ Keeping the thresholds below 100 % makes the swap happen before the hard limit, 
 - OAuth tokens stay on disk (mode `0600`). They are never sent to the browser and never logged.
 - The only outbound calls go to Anthropic's usage and token endpoints. No telemetry.
 - Files live in `~/.config/claude-swap` (or `$CLAUDE_SWAP_HOME`). Never share `secrets.json`.
+
+## About me
+
+Hi, I'm **Wesley Silva** (wesleyallan), the developer behind Claude Swap.
+
+Thank you for using my software! I built it to stop losing my train of thought every time a limit ran out, and I hope it saves you that trouble too.
+
+If Claude Swap helps you, please **give the project a ⭐ on [GitHub](https://github.com/wesleyallan/claude-swap)**. It helps other people find it and keeps me motivated to improve it. Bug reports and ideas are welcome there as well.
+
+Find me on:
+
+- [GitHub](https://github.com/wesleyallan)
+- [LinkedIn](https://www.linkedin.com/in/wesley-silva-229724208/)
+- [Instagram](https://www.instagram.com/wesleyallansilva)
+- [Facebook](https://facebook.com/wesley.allansilva)
+- [Discord](https://discord.gg/hQN2k8N6jf)
+- [E-mail](mailto:wesley.allansilva@gmail.com)

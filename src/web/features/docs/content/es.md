@@ -10,6 +10,18 @@ Agregas tus cuentas y las ordenas por prioridad. Un pequeño servicio en segundo
 
 Todo se ejecuta en tu equipo: un proceso vinculado a `127.0.0.1`, archivos JSON para el estado, sin base de datos y sin telemetría. Este panel es opcional: el motor sigue funcionando sin ningún navegador abierto.
 
+
+## Ligero por diseño
+
+Claude Swap existe para simplificar el día a día de quien programa, no para sumar otra cosa que mantener.
+
+- **Nada extra que instalar**: Node.js y la propia aplicación. Sin base de datos, sin Docker, sin colas, sin cuenta en la nube.
+- **Un solo proceso pequeño**: el motor, la API y este panel comparten un proceso de Node que usa menos de 100 MB de memoria en reposo.
+- **Archivos simples**: la configuración y el estado son archivos JSON que puedes leer (y respaldar) a mano.
+- **Solo local**: escucha en `127.0.0.1`, solo habla con los endpoints de Anthropic y no envía telemetría.
+
+Instálalo una vez, agrega tus cuentas y olvídate de él.
+
 ## Primeros pasos
 
 1. En una terminal, ejecuta `claude`, luego `/login` e inicia sesión con la primera cuenta.
@@ -53,7 +65,7 @@ Cada cuenta tiene dos ventanas de uso, medidas por Anthropic:
 
 Una cuenta cuenta como *límite alcanzado* cuando cualquiera de las ventanas está en su umbral o por encima (95 % y 98 % por defecto) y aún no se reinició. Cambiar un poco antes del 100 % evita que un prompt en curso choque con el límite real.
 
-En cada **intervalo de verificación** (3 minutos por defecto) el motor lee el uso de cada cuenta, renueva los tokens de las cuentas inactivas antes de que caduquen y vuelve a elegir la cuenta activa. Cambiar el orden, habilitar una cuenta o hacer clic en **Usar ahora** ejecuta una verificación al instante.
+En cada **intervalo de verificación** (3 minutos por defecto) el motor lee el uso de cada cuenta, renueva los tokens de las cuentas inactivas antes de que caduquen y vuelve a elegir la cuenta activa. Cambiar el orden, habilitar una cuenta o hacer clic en **Usar ahora** ejecuta una verificación al instante. El botón **Forzar comprobación** (la flecha circular de la barra superior) hace lo mismo cuando quieras y reinicia la cuenta atrás del intervalo, así nunca se ejecutan dos verificaciones seguidas.
 
 ## Configuración
 
@@ -89,3 +101,20 @@ Mantener los umbrales por debajo del 100 % hace que el cambio ocurra antes del l
 - Los tokens OAuth se quedan en disco (modo `0600`). Nunca se envían al navegador ni se registran en logs.
 - Las únicas llamadas externas van a los endpoints de uso y de tokens de Anthropic. Sin telemetría.
 - Los archivos están en `~/.config/claude-swap` (o `$CLAUDE_SWAP_HOME`). Nunca compartas `secrets.json`.
+
+## Sobre mí
+
+Hola, soy **Wesley Silva** (wesleyallan), el desarrollador de Claude Swap.
+
+¡Gracias por usar mi software! Lo creé para dejar de perder el hilo cada vez que se acababa un límite, y espero que a ti también te ahorre ese problema.
+
+Si Claude Swap te ayuda, **dale una ⭐ al proyecto en [GitHub](https://github.com/wesleyallan/claude-swap)**. Ayuda a que otras personas lo encuentren y me motiva a seguir mejorándolo. Los reportes de errores y las ideas también son bienvenidos allí.
+
+Encuéntrame en:
+
+- [GitHub](https://github.com/wesleyallan)
+- [LinkedIn](https://www.linkedin.com/in/wesley-silva-229724208/)
+- [Instagram](https://www.instagram.com/wesleyallansilva)
+- [Facebook](https://facebook.com/wesley.allansilva)
+- [Discord](https://discord.gg/hQN2k8N6jf)
+- [Correo](mailto:wesley.allansilva@gmail.com)

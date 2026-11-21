@@ -1,4 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
+import { SettingsIcon } from 'lucide-react'
 import { type FormEvent, useId, useState } from 'react'
 import { useTranslations } from 'use-intl'
 import { RouteModal } from '@/web/components/route-modal'
@@ -38,7 +39,7 @@ export function SettingsModal() {
   const t = useTranslations('modal')
   const { data } = useDashboard()
   return (
-    <RouteModal title={t('settingsTitle')}>
+    <RouteModal title={t('settingsTitle')} icon={<SettingsIcon />}>
       {data ? (
         <SettingsFormView preferences={data.preferences} />
       ) : (

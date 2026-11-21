@@ -1,27 +1,14 @@
 import { cn } from 'cn'
-import { marked } from 'marked'
+import { BookOpenIcon } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { useLocale, useTranslations } from 'use-intl'
 import { RouteModal } from '@/web/components/route-modal'
 import en from './content/en.md?raw'
 import es from './content/es.md?raw'
 import ptBR from './content/pt-BR.md?raw'
+import { parseDocs } from './parse-docs'
 
 const content: Record<string, string> = { en, es, 'pt-BR': ptBR }
-
-/** Splits a `## `-sectioned markdown file into titled sections rendered to HTML. */
-export function parseDocs(md: string) {
-  return md
-    .split(/^## /m)
-    .filter((s) => s.trim())
-    .map((s) => {
-      const nl = s.indexOf('\n')
-      return {
-        title: s.slice(0, nl).trim(),
-        html: marked.parse(s.slice(nl + 1), { async: false }),
-      }
-    })
-}
 
 /** Help pages: section list on the left, the selected section on the right, in the UI language. */
 export function DocsModal() {
@@ -38,6 +25,7 @@ export function DocsModal() {
   return (
     <RouteModal
       title={t('docsTitle')}
+      icon={<BookOpenIcon />}
       className="flex h-[min(85dvh,820px)] flex-col overflow-hidden sm:max-w-5xl"
     >
       <div className="-mx-6 -mb-6 flex min-h-0 flex-1 flex-col border-t md:flex-row">
@@ -47,7 +35,7 @@ export function DocsModal() {
         >
           <ul className="flex gap-1 md:flex-col">
             {sections.map((s, i) => (
-              <li key={s.title}>
+              <li key={s.id}>
                 <button
                   type="button"
                   aria-current={i === index ? 'page' : undefined}

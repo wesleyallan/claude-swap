@@ -16,11 +16,14 @@ import {
  */
 export function RouteModal({
   title,
+  icon,
   description,
   className,
   children,
 }: {
   title: string
+  /** Same icon as the control that opened the modal, shown before the title. */
+  icon?: ReactNode
   description?: ReactNode
   /** Extra classes for the dialog panel (e.g. a wider max width). */
   className?: string
@@ -32,7 +35,17 @@ export function RouteModal({
     <Dialog open onOpenChange={(open) => !open && navigate({ to: '/' })}>
       <DialogContent closeLabel={t('close')} className={className}>
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle className={icon ? 'flex items-center gap-3' : undefined}>
+            {icon && (
+              <span
+                aria-hidden
+                className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand [&_svg]:size-5"
+              >
+                {icon}
+              </span>
+            )}
+            {title}
+          </DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
         {children}

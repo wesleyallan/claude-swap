@@ -9,7 +9,7 @@ import { createAppRouter } from '@/web/router'
 import en from './docs/content/en.md?raw'
 import es from './docs/content/es.md?raw'
 import ptBR from './docs/content/pt-BR.md?raw'
-import { parseDocs } from './docs/docs-modal'
+import { parseDocs } from './docs/parse-docs'
 
 const account = (id: string) => ({
   id,
@@ -231,6 +231,20 @@ it('docs: lists the sections and shows the one picked', async () => {
     'aria-current',
     'page',
   )
+})
+
+it('docs: shows the icon in the title and opens external links in a new tab', async () => {
+  const user = userEvent.setup()
+  renderAt('/docs')
+  const d = await dialog('Documentation')
+  expect(
+    within(d).getByRole('heading', { name: 'Documentation' }).querySelector('svg'),
+  ).not.toBeNull()
+  await user.click(within(d).getByRole('button', { name: 'About me' }))
+  for (const link of within(d).getAllByRole('link', { name: 'GitHub' })) {
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(link).toHaveAttribute('rel', 'noreferrer')
+  }
 })
 
 it('force check runs the engine now and refetches the dashboard', async () => {
