@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Claude Swap</title>
+  <defs>
+    <linearGradient id="cs-tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#da8c70"/>
+      <stop offset="1" stop-color="#b5624a"/>
+    </linearGradient>
+    <mask id="cs-cut">
+      <rect width="64" height="64" fill="#fff"/>
+      <path fill="none" stroke="#000" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" d="M19 25.5h26M40 19.5l6 6-6 6M45 38.5H19M24 32.5l-6 6 6 6"/>
+    </mask>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#cs-tile)"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path mask="url(#cs-cut)" stroke="#faf9f5" stroke-opacity=".3" stroke-width="4.5" d="M32 9v46M9 32h46M15.7 15.7l32.6 32.6M48.3 15.7 15.7 48.3"/>
+    <path stroke="#faf9f5" stroke-width="4.5" d="M19 25.5h26M40 19.5l6 6-6 6M45 38.5H19M24 32.5l-6 6 6 6"/>
+  </g>
+</svg>
