@@ -33,6 +33,7 @@ function IconLink({
           <Button
             variant="ghost"
             size="icon"
+            className="max-sm:size-9"
             aria-label={label}
             nativeButton={false}
             render={<Link to={to} />}
@@ -59,6 +60,7 @@ function ForceCheckButton() {
           <Button
             variant="ghost"
             size="icon"
+            className="max-sm:size-9"
             aria-label={label}
             aria-busy={forceCheck.isPending}
             disabled={!data || forceCheck.isPending}
@@ -89,7 +91,7 @@ export function Header() {
   useDocumentTitle(t('app.name'))
   return (
     <header className="border-b bg-background">
-      <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-2 px-4 sm:gap-3 sm:px-6">
+      <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-2 px-3 sm:gap-3 sm:px-6">
         <Link
           to="/"
           className="flex items-center gap-2.5 rounded-md font-heading text-title-lg tracking-tight outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
@@ -98,8 +100,12 @@ export function Header() {
           <span className="max-[400px]:sr-only">{t('app.name')}</span>
         </Link>
         <EngineStatus />
-        <nav className="ml-auto flex items-center gap-1 sm:gap-2">
-          <Button nativeButton={false} render={<Link to="/accounts/new" />}>
+        <nav className="ml-auto flex items-center gap-0.5 sm:gap-2">
+          <Button
+            nativeButton={false}
+            render={<Link to="/accounts/new" />}
+            className="max-md:size-9 max-md:px-0"
+          >
             <PlusIcon data-icon="inline-start" />
             <span className="max-md:sr-only">{t('header.addAccount')}</span>
           </Button>
