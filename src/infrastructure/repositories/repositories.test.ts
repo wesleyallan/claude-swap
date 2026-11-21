@@ -7,7 +7,6 @@ import { DEFAULT_PREFERENCES } from '@/domain/preferences'
 import {
   ACTIVITY_CAP,
   compactHistory,
-  HISTORY_CAP,
   JsonConfigRepository,
   JsonSecretsRepository,
   JsonStateRepository,
@@ -121,9 +120,25 @@ const point = (t: Date, accountId = 'a', fiveHour = 1): HistoryPoint => ({
 })
 
 describe('compactHistory', () => {
-  it('keeps the last 24 h at full resolution', () => {
+  it('keeps one point per account per 3 minutes in the last 24 h', () => {
     const points = [ago(23 * HOUR), ago(10 * MIN), ago(MIN)].map((t) => point(t))
     expect(compactHistory(points, now)).toEqual(points)
+  })
+
+  it('keeps only the newest point of a 3-minute bucket in the last 24 h', () => {
+    // now (2026-11-19T12:00Z) is a bucket boundary, so -5 and -4 min share [-6, -3)
+    const points = [point(ago(5 * MIN), 'a', 1), point(ago(5 * MIN), 'b', 1), point(ago(4 * MIN))]
+    expect(compactHistory(points, now)).toEqual([points[1], points[2]])
+  })
+
+  it('bounds the size by time whatever the poll interval', () => {
+    const everyTenSeconds = Array.from({ length: 7 * 24 * 360 }, (_, i) =>
+      point(ago((7 * 24 * 360 - i) * 10_000)),
+    )
+    const out = compactHistory(everyTenSeconds, now)
+    expect(out.length).toBeLessThanOrEqual(24 * 20 + 6 * 24 * 4 + 2)
+    expect(out.at(-1)).toBe(everyTenSeconds.at(-1))
+    expect(out[0]?.t.getTime()).toBeLessThan(ago(6 * 24 * HOUR).getTime())
   })
 
   it('drops points older than 7 days', () => {
@@ -143,16 +158,6 @@ describe('compactHistory', () => {
       point(at(16), 'a', 3),
     ]
     expect(compactHistory(points, now)).toEqual([points[2], points[3], points[4]])
-  })
-
-  it('caps the buffer to the newest points', () => {
-    const points = Array.from({ length: HISTORY_CAP + 5 }, (_, i) =>
-      point(ago((HISTORY_CAP + 5 - i) * 1000)),
-    )
-    const out = compactHistory(points, now)
-    expect(out).toHaveLength(HISTORY_CAP)
-    expect(out[0]).toBe(points[5])
-    expect(out.at(-1)).toBe(points.at(-1))
   })
 })
 

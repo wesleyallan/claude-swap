@@ -67,30 +67,31 @@ export class JsonSecretsRepository implements SecretsRepository {
   }
 }
 
-const HOUR = 3_600_000
-const HISTORY_MAX_AGE_MS = 7 * 24 * HOUR
-const HISTORY_FULL_RES_MS = 24 * HOUR
-const HISTORY_BUCKET_MS = 15 * 60_000
-export const HISTORY_CAP = 10_000
+const MINUTE_MS = 60_000
+const HOUR_MS = 60 * MINUTE_MS
+const HISTORY_MAX_AGE_MS = 7 * 24 * HOUR_MS
+const RECENT_HISTORY_MS = 24 * HOUR_MS
+const RECENT_BUCKET_MS = 3 * MINUTE_MS
+const OLD_BUCKET_MS = 15 * MINUTE_MS
 export const ACTIVITY_CAP = 200
 
 /**
- * Ring buffer for usage history (oldest first): drops points older than 7 days, keeps the last
- * point per account per 15-min bucket once older than 24 h, then keeps the newest HISTORY_CAP.
+ * Usage history (oldest first) bounded by time, not by count: the newest point per account per
+ * 3-minute bucket for the last 24 h, per 15-minute bucket up to 7 days, nothing older. So each
+ * account keeps at most ~1 060 points whatever the poll interval.
  */
 export function compactHistory(points: readonly HistoryPoint[], now: Date): HistoryPoint[] {
   const kept: HistoryPoint[] = []
-  const buckets = new Set<string>()
-  for (let i = points.length - 1; i >= 0 && kept.length < HISTORY_CAP; i--) {
-    const p = points[i] as HistoryPoint
-    const age = now.getTime() - p.t.getTime()
+  const seenBuckets = new Set<string>()
+  for (let i = points.length - 1; i >= 0; i--) {
+    const point = points[i] as HistoryPoint
+    const age = now.getTime() - point.t.getTime()
     if (age > HISTORY_MAX_AGE_MS) continue
-    if (age > HISTORY_FULL_RES_MS) {
-      const key = `${p.accountId}@${Math.floor(p.t.getTime() / HISTORY_BUCKET_MS)}`
-      if (buckets.has(key)) continue
-      buckets.add(key)
-    }
-    kept.push(p)
+    const bucketMs = age > RECENT_HISTORY_MS ? OLD_BUCKET_MS : RECENT_BUCKET_MS
+    const bucket = `${point.accountId}@${bucketMs}@${Math.floor(point.t.getTime() / bucketMs)}`
+    if (seenBuckets.has(bucket)) continue
+    seenBuckets.add(bucket)
+    kept.push(point)
   }
   return kept.reverse()
 }
