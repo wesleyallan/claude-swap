@@ -28,27 +28,34 @@ export const configHome = (env: Env = process.env, home = homedir()) =>
     ? env.XDG_CONFIG_HOME
     : join(home, '.config')
 
-const unitFile = (o: Pick<ServiceOptions, 'configHome'>) =>
-  join(o.configHome, 'systemd', 'user', UNIT)
+const unitFile = (options: Pick<ServiceOptions, 'configHome'>) =>
+  join(options.configHome, 'systemd', 'user', UNIT)
 
-export function renderUnit(template: string, o: Pick<ServiceOptions, 'node' | 'repo'>): string {
-  return template.replaceAll('@NODE@', o.node).replaceAll('@REPO@', o.repo)
+export function renderUnit(
+  template: string,
+  options: Pick<ServiceOptions, 'node' | 'repo'>,
+): string {
+  return template.replaceAll('@NODE@', options.node).replaceAll('@REPO@', options.repo)
 }
 
-export async function install(o: ServiceOptions): Promise<string> {
-  const path = unitFile(o)
-  if (o.checkBuild && !o.dryRun && !existsSync(join(o.repo, 'dist/server/main.js')))
+export async function install(options: ServiceOptions): Promise<string> {
+  const path = unitFile(options)
+  if (
+    options.checkBuild &&
+    !options.dryRun &&
+    !existsSync(join(options.repo, 'dist/server/main.js'))
+  )
     throw new Error('dist/server/main.js is missing: run `npm run build` first')
-  const unit = renderUnit(await readFile(join(REPO, 'deploy', UNIT), 'utf8'), o)
+  const unit = renderUnit(await readFile(join(REPO, 'deploy', UNIT), 'utf8'), options)
   const steps = [
     ['--user', 'daemon-reload'],
     ['--user', 'enable', UNIT],
     // `enable --now` leaves a running service on the old build after an update.
     ['--user', 'restart', UNIT],
   ]
-  if (o.dryRun) {
+  if (options.dryRun) {
     console.log(`# would write ${path}\n${unit}`)
-    for (const s of steps) console.log(`# would run: systemctl ${s.join(' ')}`)
+    for (const step of steps) console.log(`# would run: systemctl ${step.join(' ')}`)
     return path
   }
   await mkdir(dirname(path), { recursive: true })
@@ -56,26 +63,26 @@ export async function install(o: ServiceOptions): Promise<string> {
   const tmp = `${path}.${process.pid}.tmp`
   await writeFile(tmp, unit, { mode: 0o644 })
   await rename(tmp, path)
-  for (const s of steps) o.run(s)
+  for (const step of steps) options.run(step)
   return path
 }
 
-export async function uninstall(o: ServiceOptions): Promise<void> {
-  const path = unitFile(o)
+export async function uninstall(options: ServiceOptions): Promise<void> {
+  const path = unitFile(options)
   const disable = ['--user', 'disable', '--now', UNIT]
   const reload = ['--user', 'daemon-reload']
-  if (o.dryRun) {
+  if (options.dryRun) {
     console.log(`# would run: systemctl ${disable.join(' ')}\n# would remove ${path}`)
     console.log(`# would run: systemctl ${reload.join(' ')}`)
     return
   }
   try {
-    o.run(disable)
+    options.run(disable)
   } catch {
     // Not installed or already stopped: removing the file is still what the user wants.
   }
   await rm(path, { force: true })
-  o.run(reload)
+  options.run(reload)
 }
 
 if (import.meta.main) {
