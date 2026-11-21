@@ -73,7 +73,8 @@
     "empty": "Aún no hay uso registrado. Los puntos aparecen tras las primeras comprobaciones.",
     "summary": "Últimos valores: {values}.",
     "summaryNone": "Sin datos en este periodo.",
-    "value": "{name}: {value}"
+    "value": "{name}: {value}",
+    "loadFailed": "No se pudo cargar el historial de uso."
   },
   "accounts": {
     "listLabel": "Cuentas por prioridad",

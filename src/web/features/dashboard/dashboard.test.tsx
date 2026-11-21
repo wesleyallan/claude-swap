@@ -185,6 +185,18 @@ it('loads the chart from /api/history, apart from the dashboard', async () => {
   expect(screen.getByText('Latest values: Account A: 40%.')).toBeInTheDocument()
 })
 
+it('says so when the history cannot be loaded instead of loading forever', async () => {
+  const respond = fetchMock.getMockImplementation()
+  if (!respond) throw new Error('fetchMock has no implementation')
+  fetchMock.mockImplementation(async (input, init) =>
+    String(input).endsWith('/api/history')
+      ? Response.json({ error: 'internal' }, { status: 500 })
+      : respond(input, init),
+  )
+  renderApp()
+  expect(await screen.findByText("Couldn't load the usage history.")).toBeInTheDocument()
+})
+
 it('reorders with the keyboard, optimistically, keeping focus on the arrow', async () => {
   const user = userEvent.setup()
   renderApp()

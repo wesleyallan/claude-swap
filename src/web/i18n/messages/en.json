@@ -73,7 +73,8 @@
     "empty": "No usage recorded yet. Points appear after the first checks.",
     "summary": "Latest values: {values}.",
     "summaryNone": "No data in this period.",
-    "value": "{name}: {value}"
+    "value": "{name}: {value}",
+    "loadFailed": "Couldn't load the usage history."
   },
   "accounts": {
     "listLabel": "Accounts by priority",

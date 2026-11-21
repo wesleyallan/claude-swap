@@ -33,15 +33,15 @@ function ChartCard({ data }: { data: DashboardData }) {
       <h2 id="usage-title" className="font-heading text-title-lg">
         {t('title')}
       </h2>
-      {!history.data ? (
+      {!history.data && !history.isError ? (
         <ChartSkeleton />
-      ) : history.data.length === 0 ? (
+      ) : !history.data?.length ? (
         <Empty className="border-none py-6">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <ChartLineIcon />
             </EmptyMedia>
-            <EmptyDescription>{t('empty')}</EmptyDescription>
+            <EmptyDescription>{history.isError ? t('loadFailed') : t('empty')}</EmptyDescription>
           </EmptyHeader>
         </Empty>
       ) : (
