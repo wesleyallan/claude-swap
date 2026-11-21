@@ -1,6 +1,30 @@
-# claude-swap
+<div align="center">
 
-A local hub that keeps **Claude Code** logged into the best of several Claude (claude.ai) accounts.
+<img src="src/web/public/logo.svg" alt="Claude Swap logo" width="112" height="112" />
+
+<h1>Claude Swap</h1>
+
+<hr width="160" />
+
+<p>
+  <img src="https://flagcdn.com/24x18/us.png" width="24" height="18" alt="English" title="English" />&nbsp;
+  <img src="https://flagcdn.com/24x18/es.png" width="24" height="18" alt="Español" title="Español" />&nbsp;
+  <img src="https://flagcdn.com/24x18/br.png" width="24" height="18" alt="Português (Brasil)" title="Português (Brasil)" />
+</p>
+
+<p>
+  Keep <strong>Claude Code</strong> running on whichever of your Claude accounts still has room.<br />
+  Local, private, and automatic: it swaps accounts when a limit is reached and swaps back when it resets.
+</p>
+
+</div>
+
+---
+
+## Why
+
+If you have more than one Claude subscription (work and personal, say), you stop hitting a limit
+in the middle of a session and then having to `/login` again by hand.
 
 You add your accounts and put them in priority order. A small background service keeps exactly one
 of them active in Claude Code and:
@@ -9,11 +33,9 @@ of them active in Claude Code and:
 - **swaps back up** to a higher-priority account as soon as its limit resets;
 - lets you **swap by hand**: "Use now" (or dragging an account to the top) makes it active.
 
-Why: if you have more than one Claude subscription (work and personal, say), you stop hitting a
-limit in the middle of a session and then having to `/login` again by hand.
-
 Everything runs on your machine: one Node process bound to `127.0.0.1`, JSON files for state, no
-database, no telemetry. The web dashboard is optional; the engine works with no browser open.
+database, no telemetry. The web dashboard is optional; the engine works with no browser open. The
+dashboard has built-in documentation (the book icon in the top bar) in every supported language.
 
 ![Dashboard, light theme](docs/screenshots/dashboard-light.png)
 ![Dashboard, dark theme](docs/screenshots/dashboard-dark.png)
@@ -105,7 +127,10 @@ made).
 ## Limitations
 
 - **Running sessions**: a Claude Code session that is already open picks up the new account only
-  when it reads its credentials file again. New sessions always use the active account.
+  when it reads its credentials file again (token refresh, or a rejected request). New sessions
+  always use the active account. If a prompt hits the hard limit before the swap, Claude Code ends
+  that turn; send `continue` in the same session once the swap is done. Thresholds below 100 %
+  (the default) make the swap happen first.
 - **Unofficial endpoints**: usage and token refresh use the same endpoints as Claude Code
   (`api.anthropic.com/api/oauth/usage`, `platform.claude.com/v1/oauth/token`). They are not a
   public API and may change without notice.
@@ -142,6 +167,18 @@ Stop the service before editing these files by hand. A file that does not parse 
   `RestrictSUIDSGID`, `RestrictNamespaces`, `PrivateTmp`, `ProtectSystem=full`, …). Your home
   folder stays writable because the service has to write Claude Code's files. Anyone who can run
   code as your user can read your tokens, with or without claude-swap.
+
+## Languages
+
+The dashboard and its documentation are available in English, Español and Português (Brasil).
+Pick one in the top bar or in Settings. Translations live in `src/web/i18n/messages/` and
+`src/web/features/docs/content/`.
+
+## Brand assets
+
+The logo lives in `src/web/public/`: `logo.svg` (vector source), `favicon.ico` (16/32/48),
+`favicon-16.png`, `favicon-32.png`, `apple-touch-icon.png` (180), `icon-192.png` and
+`icon-512.png` (transparent background).
 
 ## Development
 

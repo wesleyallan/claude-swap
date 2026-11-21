@@ -430,3 +430,13 @@ Separating secrets from preferences keeps the user-editable config safe to open,
 - 2026-11-20 — **Visual checks** (T13): `theme-color` metas follow `prefers-color-scheme` only (a
   forced theme keeps the system's browser-chrome colour; cosmetic). Transitions list their
   properties instead of `transition-all`; dialogs use `overscroll-behavior: contain`.
+- 2026-11-21 — **Brand mark**: swap arrows over our eight-spoke asterisk on a coral tile
+  (`src/web/public/logo.svg` is the source; `Logo` inlines the same drawing). Icons are static
+  files under Vite's `public/`, served by the catch-all `files(..., 'no-cache')` route.
+- 2026-11-21 — **Header icon buttons + tooltips**: Settings and Documentation are icon-only links
+  with a Base UI tooltip (same text as `aria-label`). Tooltip/floating-ui joins the initial chunk;
+  measured 187 kB gzip, still under the 200 kB budget.
+- 2026-11-21 — **In-app documentation**: `/docs` modal route (lazy chunk) renders bundled
+  per-locale markdown (`features/docs/content/{en,es,pt-BR}.md`, split on `## `) with `marked`.
+  Content is ours, so it is rendered as HTML without sanitising; never feed it user input.
+- 2026-11-21 — **Tab title**: `<active account label> - Claude Swap`, from the polled dashboard.
